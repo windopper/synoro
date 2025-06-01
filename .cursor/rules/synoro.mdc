@@ -1,0 +1,426 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Stellar Observatory Simulation - Cursor Rules
+
+## 프로젝트 개요
+- **프로젝트명**: Synoro Stellar Observatory (별 관측소 시뮬레이션)
+- **목적**: 실제 천문학적 데이터 기반의 3D 별 탐험 및 교육용 시뮬레이션
+- **기술 스택**: Next.js 15, React 19, TypeScript, Three.js, React Three Fiber, Tailwind CSS, Framer Motion
+
+## 현재 구현된 핵심 시스템
+
+### 별 관측소 아키텍처
+- **StarsScene**: 메인 3D 별 탐험 환경
+- **Star Component**: 개별 별 3D 렌더링 및 상호작용
+- **StarTooltip**: 전문적인 천문학적 정보 툴팁
+- **StarData System**: 실제 천문학적 데이터베이스
+
+## 핵심 컴포넌트 구조
+
+### 1. StarData 인터페이스
+```typescript
+interface StarData {
+  id: string;
+  name: string;
+  designation: string;  // 바이어 지정법 등
+  constellation: string;
+  apparentMagnitude: number;
+  absoluteMagnitude: number;
+  distance: number; // light years
+  spectralClass: string; // O, B, A, F, G, K, M
+  temperature: number; // Kelvin
+  mass: number; // solar masses
+  radius: number; // solar radii
+  luminosity: number; // solar luminosities
+  rightAscension: string;
+  declination: string;
+  description: string;
+  discoveryInfo?: string;
+  variableType?: string;
+  position: { x: number; y: number; z: number };
+  color: string; // 스펙트럼 클래스별 실제 색상
+  size: number;
+}
+```
+
+### 2. 별 컴포넌트 규칙
+- **3D 렌더링**: 실제 밝기에 기반한 크기 및 발광 효과
+- **호버 효과**: 1.3배 확대, 툴팁 표시
+- **클릭 효과**: 0.8배 축소 후 복원
+- **반짝임 효과**: 밝은 별(magnitude < 2)에 sparkle points 추가
+- **렌즈 플레어**: 매우 밝은 별(magnitude < 0)에 십자형 플레어
+
+### 3. 스펙트럼 클래스별 색상 시스템
+```typescript
+const spectralColors = {
+  'O': '#92c5f7', // 청백색 (매우 뜨거운)
+  'B': '#a2d2ff', // 청백색
+  'A': '#cad8ff', // 흰색
+  'F': '#fff2a1', // 황백색
+  'G': '#ffeb99', // 황색 (태양형)
+  'K': '#ffb347', // 주황색
+  'M': '#ff6b6b'  // 적색 (차가운)
+}
+```
+
+## 상호작용 시스템
+
+### 1. 호버 이벤트
+- **시각적 피드백**: 별 확대, 발광 강화, sparkle 효과 증대
+- **툴팁 표시**: 마우스 위치에 전문적인 천문학적 정보 패널
+- **커서 변경**: pointer 커서로 변경
+- **3D-2D 좌표 변환**: Three.js의 project() 메서드 사용
+
+### 2. 클릭 이벤트
+- **선택 효과**: 별 정보를 우측 패널에 표시
+- **콘솔 로깅**: 선택된 별의 상세 정보 출력
+- **이벤트 전파 방지**: stopPropagation() 필수
+
+### 3. 카메라 컨트롤
+- **OrbitControls**: 회전, 줌, 패닝 지원
+- **제한 설정**: minDistance: 5, maxDistance: 200
+- **감속 효과**: dampingFactor: 0.05
+
+## 툴팁 시스템 디자인
+
+### 1. 시각적 디자인 원칙
+- **다크 테마**: 검은색 배경 (bg-black/95)
+- **글래스모피즘**: backdrop-blur 효과
+- **그라데이션 경계**: 헤더에 색상 그라데이션
+- **계층적 정보 표시**: 주요 정보는 밝게, 부가 정보는 옅게
+
+### 2. 정보 계층 구조
+```
+헤더: 별 이름, 지정법, 별자리 (파랑-보라 그라데이션 배경)
+├── 주요 특성 (그리드 레이아웃)
+│   ├── 겉보기 등급, 거리, 스펙트럼 클래스
+│   └── 온도, 질량, 반지름
+├── 부가 정보
+│   ├── 광도, 좌표
+│   └── 변성 유형 (해당시)
+└── 설명
+    ├── 천문학적 특징
+    └── 발견 정보
+```
+
+### 3. 애니메이션 효과
+- **등장**: opacity(0) + scale(0.6) → opacity(1) + scale(1)
+- **퇴장**: 역방향 애니메이션
+- **스프링 효과**: stiffness: 260, damping: 10
+- **회전 효과**: 마우스 움직임에 따른 미세한 회전 (-45° ~ +45°)
+- **위치 조정**: 화면 경계 자동 조절
+
+## 데이터 시스템
+
+### 1. 실제 별 데이터베이스 (12개 주요 별)
+- **시리우스** (α CMa): 가장 밝은 별, 이중성계, A1V, -1.46등급
+- **카노푸스** (α Car): 남반구 밝은 거성, F0II, -0.74등급
+- **아크투루스** (α Boo): 주황색 거성, K1.5III, -0.05등급
+- **베가** (α Lyr): 전 북극성, A0V, 0.03등급
+- **카펠라** (α Aur): 복합 사중성계, G8III+G0III, 0.08등급
+- **리겔** (β Ori): 청색 초거성, B8Iab, 0.13등급
+- **베텔게우스** (α Ori): 적색 초거성, M2Iab, 0.50등급
+- **알타이르** (α Aql): 빠른 자전, A7V, 0.77등급
+- **알데바란** (α Tau): 주황색 거성, K5III, 0.85등급
+- **스피카** (α Vir): 근접 이중성, B1V+B4V, 1.04등급
+- **안타레스** (α Sco): 적색 초거성, M1.5Ib, 1.06등급
+- **폴럭스** (β Gem): 외계행성 보유, K0III, 1.14등급
+
+### 2. 절차적 생성 별 시스템 (50개)
+```typescript
+generateRandomStars(count: number = 50) {
+  // 실제 별 이름 사용: Proxima Centauri, Wolf 359, Lalande 21185 등
+  // 랜덤 스펙트럼 클래스: O, B, A, F, G, K, M
+  // 거리: 5-105 광년
+  // 온도: 3000-23000 K
+  // 질량: 0.1-20 태양질량
+  // 3D 위치: 80×60×100 단위 공간에 분포
+}
+```
+
+### 3. 배경 별필드
+- **DreiStars**: 8000개 원거리 별
+- **시차 효과**: fade 속성으로 거리감 표현
+- **애니메이션**: 느린 회전 (speed: 0.5)
+
+## UI/UX 디자인 시스템
+
+### 1. 색상 팔레트
+```scss
+// 주색상
+$primary-bg: radial-gradient(ellipse at center, #0F1419 0%, #000000 100%);
+$panel-bg: rgba(0, 0, 0, 0.5);
+$border: rgba(255, 255, 255, 0.1);
+
+// 강조색
+$accent-blue: #3b82f6;
+$accent-purple: #8b5cf6;
+$accent-green: #10b981;
+
+// 정보색 (스펙트럼별)
+$orange-info: #fb923c;    // 온도
+$yellow-info: #fbbf24;    // 질량
+$cyan-info: #06b6d4;      // 반지름
+$emerald-info: #10b981;   // 광도
+$purple-info: #a855f7;    // 변성
+```
+
+### 2. 타이포그래피 시스템
+```css
+/* 제목 */
+.title-xl { font-size: 1.5rem; font-weight: 700; }
+.title-gradient { 
+  background: linear-gradient(to right, #60a5fa, #a78bfa);
+  background-clip: text;
+  color: transparent;
+}
+
+/* 본문 */
+.body-sm { font-size: 0.875rem; line-height: 1.5; }
+.body-xs { font-size: 0.75rem; line-height: 1.4; }
+
+/* 라벨 */
+.label-xs { 
+  font-size: 0.75rem; 
+  text-transform: uppercase; 
+  letter-spacing: 0.05em;
+  color: rgba(156, 163, 175, 1);
+}
+```
+
+### 3. 레이아웃 구조
+```
+┌─────────────────────────────────────────────────────────┐
+│ [좌상단] 프로젝트 정보 패널                            │ [우상단] 선택된 별 상세 패널 (조건부)
+│ - 제목: "Stellar Observatory"                        │ - 별 이름 및 기본 정보
+│ - 설명: "Explore the cosmos..."                     │ - 별자리, 스펙트럼 클래스
+│ - 조작 가이드 (드래그, 줌, 호버)                      │ - 설명 텍스트
+│                                                       │ - 닫기 버튼
+├─────────────────────────────────────────────────────────┤
+│                                                       │
+│                3D 별 탐험 공간                        │
+│              (Canvas + OrbitControls)                │
+│                                                       │
+│            [중앙] 툴팁 오버레이 (호버시)               │
+│                                                       │
+├─────────────────────────────────────────────────────────┤
+│                                                       │ [우하단] 통계 정보 패널
+│                                                       │ - 총 별 개수: 62개
+│                                                       │ - 밝은 별 개수: N개
+└─────────────────────────────────────────────────────────┘
+```
+
+## 성능 최적화 전략
+
+### 1. 3D 렌더링 최적화
+```typescript
+// BufferGeometry 사용
+const sparkleGeometry = useMemo(() => {
+  const sparkles: number[] = []
+  const count = 20 // 적절한 입자 수
+  // ... 위치 계산
+  return new Float32Array(sparkles)
+}, [])
+
+// 조건부 렌더링
+{star.apparentMagnitude < 2 && (
+  <SparklePoints />
+)}
+
+{star.apparentMagnitude < 0 && (
+  <LensFlare />
+)}
+```
+
+### 2. 애니메이션 최적화
+```typescript
+useFrame((state) => {
+  if (!meshRef.current) return
+  
+  // Delta 기반 일정한 속도
+  meshRef.current.rotation.y += 0.01
+  
+  // 조건부 애니메이션
+  if (star.apparentMagnitude < 1) {
+    const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1
+    meshRef.current.scale.setScalar(scale)
+  }
+})
+```
+
+### 3. 메모리 관리
+- **데이터 캐싱**: `generateRandomStars()` 결과를 `allStars`에 캐시
+- **이벤트 정리**: useEffect cleanup으로 이벤트 리스너 제거
+- **Three.js 리소스**: dispose() 호출로 geometry, material 정리
+
+## 과학적 정확성 및 교육적 가치
+
+### 1. 천문학적 데이터 출처
+- **히파르코스 카탈로그**: 정확한 시차 및 고유운동 데이터
+- **바이어 지정법**: α, β, γ 등 전통적 별 명명법
+- **모건-키넌 분류**: 스펙트럼 클래스 및 광도 등급
+- **IAU 공식 별 이름**: 국제천문연맹 승인 이름 사용
+
+### 2. 물리적 정확성
+```typescript
+// 겉보기 등급에 따른 시각적 크기
+const starSize = Math.max(0.1, 2 - star.apparentMagnitude * 0.3) * star.size
+
+// 발광 강도 (밝은 별일수록 강함)
+const glowIntensity = Math.max(0.2, 2 - star.apparentMagnitude * 0.4)
+
+// 스펙트럼 클래스별 실제 색온도 반영
+const spectralColors = { /* 위에 정의된 색상 */ }
+```
+
+### 3. 교육적 정보 표시
+```typescript
+// 단위 포매팅
+formatDistance(8.6) → "8.6 ly"           // 광년
+formatMass(2.063) → "2.06 M☉"            // 태양질량
+formatTemperature(9940) → "9,940 K"      // 켈빈
+formatLuminosity(25.4) → "25.4 L☉"       // 태양광도
+formatRadius(1.711) → "1.7 R☉"           // 태양반지름
+```
+
+## 개발 가이드라인
+
+### 1. Three.js 특화 규칙
+```typescript
+// BufferAttribute 올바른 사용법
+<bufferAttribute
+  attach="attributes-position"
+  args={[sparkleGeometry, 3]}  // [array, itemSize]
+/>
+
+// Material 속성 설정
+<meshStandardMaterial 
+  color={star.color}
+  emissive={star.color}           // 자체 발광
+  emissiveIntensity={intensity}   // 발광 강도
+  transparent
+  opacity={0.9}
+/>
+
+// 이벤트 처리
+const handlePointerOver = (event: any) => {
+  event.stopPropagation()  // 필수!
+  // ... 처리 로직
+}
+```
+
+### 2. React Three Fiber 패턴
+```typescript
+// useRef로 Three.js 객체 직접 접근
+const meshRef = useRef<Mesh>(null)
+
+// useFrame으로 애니메이션
+useFrame((state) => {
+  if (!meshRef.current) return
+  // 애니메이션 로직
+})
+
+// 조건부 3D 객체 렌더링
+{condition && (
+  <mesh>
+    {/* 3D 컴포넌트 */}
+  </mesh>
+)}
+```
+
+### 3. 상태 관리 패턴
+```typescript
+// 컴포넌트별 독립적 상태
+const [hovered, setHovered] = useState(false)
+const [clicked, setClicked] = useState(false)
+
+// 부모-자식 간 콜백 패턴
+interface StarProps {
+  onHover: (star: StarData | null, position: { x: number; y: number }) => void;
+  onClick: (star: StarData) => void;
+}
+```
+
+## 파일 구조 및 아키텍처
+
+```
+app/
+├── components/
+│   ├── Star.tsx                    # 개별 별 3D 컴포넌트
+│   │   ├── 3D 렌더링 (구체, 발광, 스파클)
+│   │   ├── 호버/클릭 이벤트 처리
+│   │   ├── 애니메이션 (회전, 맥동, 반짝임)
+│   │   └── 조건부 효과 (플레어, 스파클)
+│   │
+│   ├── StarTooltip.tsx             # 전문적인 천문학적 툴팁
+│   │   ├── 모던한 UI 디자인
+│   │   ├── 계층적 정보 표시
+│   │   ├── 스프링 애니메이션
+│   │   └── 단위 포매팅 함수들
+│   │
+│   └── scenes/
+│       └── StarsScene.tsx          # 메인 별 탐험 씬
+│           ├── Canvas 설정 (카메라, 조명)
+│           ├── OrbitControls
+│           ├── 배경 별필드 (DreiStars)
+│           ├── UI 오버레이들
+│           └── 이벤트 핸들링
+│
+├── data/
+│   └── starData.ts                # 별 데이터베이스
+│       ├── StarData 인터페이스
+│       ├── 실제 별 데이터 (12개)
+│       ├── 랜덤 별 생성 함수
+│       └── allStars 배열
+│
+├── lib/
+│   └── utils.ts                   # 유틸리티 함수
+│       └── cn() - 클래스 병합
+│
+└── page.tsx                       # 메인 페이지
+    ├── 동적 import (SSR 방지)
+    └── 전체 화면 레이아웃
+```
+
+## 확장 로드맵
+
+### 1. 단기 확장 (1-2개월)
+- **성단 시스템**: 플레이아데스, 히아데스, M13 구상성단
+- **이중성 애니메이션**: 시리우스, 알비레오 등의 궤도 운동
+- **변성 시뮬레이션**: 세페이드, 미라형 변성의 밝기 변화
+- **외계행성 표시**: 확인된 외계행성 시각화
+
+### 2. 중기 확장 (3-6개월)
+- **은하 구조 통합**: 나선팔 내에서의 별 분포
+- **성간 물질**: 성운, 암흑성운, HII 영역
+- **별 진화**: 주계열성 → 거성 → 백왜성/중성자별/블랙홀
+- **시간 시뮬레이션**: 천체 운동 및 진화 과정
+
+### 3. 장기 확장 (6개월+)
+- **실시간 관측 데이터**: ESA Gaia, Hubble 데이터 연동
+- **VR/AR 지원**: WebXR을 통한 몰입형 우주 탐험
+- **시민 과학 프로젝트**: 사용자 참여형 별 분류
+- **교육 과정**: 체계적인 천문학 학습 프로그램
+
+## 기술적 도전과제 및 해결책
+
+### 1. 성능 최적화
+**도전**: 수천 개 별의 실시간 렌더링
+**해결**: BufferGeometry + 인스턴싱 + LOD 시스템
+
+### 2. 과학적 정확성
+**도전**: 복잡한 천문학적 데이터의 정확한 표현
+**해결**: 전문 데이터베이스 활용 + 물리학 기반 계산
+
+### 3. 사용자 경험
+**도전**: 복잡한 정보의 직관적 표현
+**해결**: 계층적 UI + 상황별 툴팁 + 점진적 공개
+
+### 4. 교육적 가치
+**도전**: 과학적 정확성과 접근성의 균형
+**해결**: 다층적 정보 구조 + 시각적 메타포 활용
+
+이 규칙서는 Synoro Stellar Observatory의 지속적인 발전과 과학적 정확성을 보장하기 위한 종합적인 가이드입니다. 
