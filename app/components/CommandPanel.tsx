@@ -4,12 +4,15 @@ import { useState } from "react";
 import { useAppSelector } from "../lib/hooks";
 import ShipStatusOverview from "./ship/ShipStatusOverview";
 import NavigationPanel from "./navigation/NavigationPanel";
+import SystemDiagnosticsPanel from "./systems/SystemDiagnosticsPanel";
 import TabButton from "./ui/TabButton";
 import { Navigation, Ship, Cpu, Settings } from "lucide-react";
 
 export default function CommandPanel() {
   const [isOpen, setIsOpen] = useState(true);
-  const [view, setView] = useState<"nav" | "ship" | "systems" | "settings">("nav");
+  const [view, setView] = useState<"nav" | "ship" | "systems" | "settings">(
+    "nav"
+  );
 
   const togglePanel = () => {
     setIsOpen(!isOpen);
@@ -21,23 +24,15 @@ export default function CommandPanel() {
       case "ship":
         return <ShipStatusOverview />;
       case "systems":
-        return (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <Cpu className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-              <div className="text-gray-300 font-mono text-sm">System Diagnostics</div>
-              <div className="text-gray-500 font-mono text-xs mt-2">
-                Power Core: 98% | Life Support: NOMINAL
-              </div>
-            </div>
-          </div>
-        );
+        return <SystemDiagnosticsPanel />;
       case "settings":
         return (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <Settings className="w-8 h-8 text-orange-400 mx-auto mb-2" />
-              <div className="text-gray-300 font-mono text-sm">Configuration Panel</div>
+              <div className="text-gray-300 font-mono text-sm">
+                Configuration Panel
+              </div>
               <div className="text-gray-500 font-mono text-xs mt-2">
                 Interface Settings | Audio | Display
               </div>
@@ -95,9 +90,7 @@ export default function CommandPanel() {
               </div>
 
               {/* Content Section */}
-              <div className="p-4 w-4xl relative">
-                {renderContent()}
-              </div>
+              <div className="p-4 w-4xl relative">{renderContent()}</div>
             </div>
 
             {/* Enhanced Footer Section */}
@@ -118,9 +111,7 @@ export default function CommandPanel() {
                 <div className="text-gray-400 font-mono text-xs uppercase tracking-wider">
                   Command Interface
                 </div>
-                <div className="text-green-400 font-mono text-xs">
-                  READY
-                </div>
+                <div className="text-green-400 font-mono text-xs">READY</div>
               </div>
             </div>
           </div>
