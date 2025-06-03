@@ -40,6 +40,7 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
   };
   const handleRepair = () => dispatch(repairModule({ moduleId, repairAmount: info.durability * 0.2 }));
   const handleUpgrade = () => dispatch(startModuleUpgrade({ moduleId }));
+  const needEnergyAllocation = info.energyConsumption.base !== info.energyConsumption.max;
 
   const durabilityPercent = (module.currentDurability / info.durability) * 100;
 
@@ -55,7 +56,8 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: "linear-gradient(rgba(156, 163, 175, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.1) 1px, transparent 1px)",
+            backgroundImage:
+              "linear-gradient(rgba(156, 163, 175, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.1) 1px, transparent 1px)",
             backgroundSize: "20px 20px",
           }}
         />
@@ -70,7 +72,9 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
               <div className="w-2 h-2 bg-gray-400 animate-pulse rounded-full" />
               <span className="text-2xl">{icon}</span>
               <div>
-                <h3 className="text-lg font-mono text-gray-100 tracking-wide">{info.nameKo}</h3>
+                <h3 className="text-lg font-mono text-gray-100 tracking-wide">
+                  {info.nameKo}
+                </h3>
                 <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">
                   MODULE_ID: {moduleId.slice(0, 12)}
                 </div>
@@ -79,13 +83,15 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
             <button
               onClick={handleToggle}
               className={`group relative px-4 py-2 text-xs font-mono uppercase tracking-wider rounded transition-all duration-300 ${
-                module.isActive 
-                  ? 'bg-green-600/80 text-green-100 hover:bg-green-500/80 border border-green-500/50' 
-                  : 'bg-gray-600/80 text-gray-300 hover:bg-gray-500/80 border border-gray-500/50'
+                module.isActive
+                  ? "bg-green-600/80 text-green-100 hover:bg-green-500/80 border border-green-500/50"
+                  : "bg-gray-600/80 text-gray-300 hover:bg-gray-500/80 border border-gray-500/50"
               }`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <span className="relative">{module.isActive ? 'Active' : 'Inactive'}</span>
+              <span className="relative">
+                {module.isActive ? "Active" : "Inactive"}
+              </span>
             </button>
           </div>
         </div>
@@ -93,54 +99,89 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
         {/* Description */}
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-500 via-gray-600 to-transparent rounded-full" />
-          <p className="text-gray-300 text-sm leading-relaxed pl-4 font-mono">{info.description}</p>
+          <p className="text-gray-300 text-sm leading-relaxed pl-4 font-mono">
+            {info.description}
+          </p>
         </div>
 
         {/* Durability section */}
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-            <span className="text-sm font-mono text-gray-200 tracking-wide uppercase">Durability Status</span>
+            <span className="text-sm font-mono text-gray-200 tracking-wide uppercase">
+              Durability Status
+            </span>
           </div>
           <div className="flex justify-between text-sm font-mono">
             <span className="text-gray-400">Integrity</span>
-            <span className="text-gray-100">{module.currentDurability}/{info.durability}</span>
+            <span className="text-gray-100">
+              {module.currentDurability}/{info.durability}
+            </span>
           </div>
           <div className="w-full h-3 bg-gray-700/60 rounded overflow-hidden">
-            <div 
+            <div
               className={`h-full transition-all duration-500 ${
-                durabilityPercent > 75 ? 'bg-green-500' : 
-                durabilityPercent > 50 ? 'bg-yellow-400' : 
-                durabilityPercent > 25 ? 'bg-orange-500' : 'bg-red-500'
+                durabilityPercent > 75
+                  ? "bg-green-500"
+                  : durabilityPercent > 50
+                  ? "bg-yellow-400"
+                  : durabilityPercent > 25
+                  ? "bg-orange-500"
+                  : "bg-red-500"
               }`}
               style={{ width: `${durabilityPercent}%` }}
             />
           </div>
-          <div className="text-xs font-mono text-gray-500">{durabilityPercent.toFixed(1)}% Operational</div>
+          <div className="text-xs font-mono text-gray-500">
+            {durabilityPercent.toFixed(1)}% Operational
+          </div>
         </div>
 
         {/* Energy allocation section */}
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
-            <span className="text-sm font-mono text-gray-200 tracking-wide uppercase">Energy Allocation</span>
+            <span className="text-sm font-mono text-gray-200 tracking-wide uppercase">
+              Energy Allocation
+            </span>
           </div>
           <div className="flex justify-between text-sm font-mono">
-            <span className="text-gray-400">Power Distribution</span>
-            <span className="text-blue-300">{module.energyAllocation}%</span>
+            {needEnergyAllocation ? (
+              <span className="flex items-center space-x-2">
+                <span className="text-gray-400">Power Distribution</span>
+                <span className="text-gray-300">
+                  {info.energyConsumption.base} / {info.energyConsumption.max}
+                </span>
+              </span>
+            ) : (
+              <>
+                <span className="text-gray-400">Power Distribution</span>
+                <span className="text-gray-300">
+                  {info.energyConsumption.base}&nbsp;MW
+                </span>
+              </>
+            )}
+            {needEnergyAllocation && (
+              <span className="text-blue-300">{module.energyAllocation}%</span>
+            )}
           </div>
-          <div className="relative">
-            <input
-              type="range"
-              min={0} max={100}
-              value={module.energyAllocation}
-              onChange={e => handleAllocChange(Number(e.target.value))}
-              className="w-full h-3 bg-gray-700/60 rounded-lg appearance-none cursor-pointer slider"
-              disabled={!module.isActive}
-            />
-            <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-blue-600/20 via-blue-500/40 to-blue-400/20 rounded-lg pointer-events-none" 
-                 style={{ width: `${module.energyAllocation}%` }} />
-          </div>
+          {needEnergyAllocation && (
+            <div className="relative">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={module.energyAllocation}
+                onChange={(e) => handleAllocChange(Number(e.target.value))}
+                className="w-full h-3 bg-gray-700/60 rounded-lg appearance-none cursor-pointer slider"
+                disabled={!module.isActive || !needEnergyAllocation}
+              />
+              <div
+                className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-blue-600/20 via-blue-500/40 to-blue-400/20 rounded-lg pointer-events-none"
+                style={{ width: `${module.energyAllocation}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Upgrade Requirements section - 새로 추가 */}
@@ -148,53 +189,79 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
           <div className="space-y-3 border-t border-gray-700/50 pt-4">
             <div className="flex items-center space-x-2">
               <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
-              <span className="text-sm font-mono text-gray-200 tracking-wide uppercase">Upgrade Requirements</span>
+              <span className="text-sm font-mono text-gray-200 tracking-wide uppercase">
+                Upgrade Requirements
+              </span>
             </div>
             <div className="bg-gray-800/40 p-3 rounded border border-gray-700/30">
               <div className="text-sm font-mono text-gray-300 mb-2">
-                Upgrade to: <span className="text-purple-300">{nextInfo.nameKo}</span>
+                Upgrade to:{" "}
+                <span className="text-purple-300">{nextInfo.nameKo}</span>
               </div>
-              
+
               {/* Research Requirements */}
               {nextInfo.requiredResearch && (
                 <div className="mb-3">
-                  <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">Required Research</div>
-                  <div className="text-sm font-mono text-yellow-300">{nextInfo.requiredResearch}</div>
+                  <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">
+                    Required Research
+                  </div>
+                  <div className="text-sm font-mono text-yellow-300">
+                    {nextInfo.requiredResearch}
+                  </div>
                 </div>
               )}
 
               {/* Resource Requirements */}
               <div className="mb-3">
-                <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2">Required Resources</div>
+                <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2">
+                  Required Resources
+                </div>
                 <div className="space-y-1">
-                  {Object.entries(nextInfo.requiredResources).map(([resource, required]) => {
-                    const available = resources[resource] || 0;
-                    const hasEnough = available >= required;
-                    return (
-                      <div key={resource} className="flex justify-between items-center text-sm font-mono">
-                        <span className="text-gray-300">{resource}</span>
-                        <span className={`${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
-                          {available}/{required}
-                        </span>
-                      </div>
-                    );
-                  })}
+                  {Object.entries(nextInfo.requiredResources).map(
+                    ([resource, required]) => {
+                      const available = resources[resource] || 0;
+                      const hasEnough = available >= required;
+                      return (
+                        <div
+                          key={resource}
+                          className="flex justify-between items-center text-sm font-mono"
+                        >
+                          <span className="text-gray-300">{resource}</span>
+                          <span
+                            className={`${
+                              hasEnough ? "text-green-400" : "text-red-400"
+                            }`}
+                          >
+                            {available}/{required}
+                          </span>
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
               </div>
 
               {/* RP Cost */}
               {nextInfo.upgradeCost && (
                 <div className="mb-3">
-                  <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">RP Cost</div>
-                  <div className="text-sm font-mono text-cyan-300">{nextInfo.upgradeCost} RP</div>
+                  <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">
+                    RP Cost
+                  </div>
+                  <div className="text-sm font-mono text-cyan-300">
+                    {nextInfo.upgradeCost} RP
+                  </div>
                 </div>
               )}
 
               {/* Upgrade Effects */}
               {nextInfo.upgradeEffects && (
                 <div>
-                  <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">Upgrade Effects</div>
-                  <div className="text-sm font-mono text-green-300">{nextInfo.upgradeEffects}</div>
+                  <div className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-1">
+                    Upgrade Effects
+                  </div>
+                  <div className="text-sm font-mono text-green-300">
+                    {nextInfo.upgradeEffects}
+                  </div>
                 </div>
               )}
             </div>
@@ -216,14 +283,20 @@ export default function ModuleDetails({ moduleId }: ModuleDetailsProps) {
               onClick={handleUpgrade}
               disabled={!canUpgrade}
               className={`group relative flex-1 px-4 py-2 text-sm font-mono uppercase tracking-wider rounded transition-all duration-300 border ${
-                canUpgrade 
-                  ? 'bg-purple-600/80 text-purple-100 hover:bg-purple-500/80 border-purple-500/50'
-                  : 'bg-gray-600/50 text-gray-400 border-gray-500/30 cursor-not-allowed'
+                canUpgrade
+                  ? "bg-purple-600/80 text-purple-100 hover:bg-purple-500/80 border-purple-500/50"
+                  : "bg-gray-600/50 text-gray-400 border-gray-500/30 cursor-not-allowed"
               }`}
             >
-              <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-opacity duration-300 rounded ${canUpgrade ? 'group-hover:opacity-100' : ''}`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-opacity duration-300 rounded ${
+                  canUpgrade ? "group-hover:opacity-100" : ""
+                }`}
+              />
               <span className="relative">
-                {canUpgrade ? `Upgrade to ${nextInfo.nameKo}` : 'Insufficient Resources'}
+                {canUpgrade
+                  ? `Upgrade to ${nextInfo.nameKo}`
+                  : "Insufficient Resources"}
               </span>
             </button>
           )}

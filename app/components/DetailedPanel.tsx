@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from "react"
+import { memo, useState } from "react"
 import ShipSystemsPanel from "./ship/ShipSystemsPanel";
 import { Shapes, X } from "lucide-react";
 
-export default function DetailedPanel() {
+function DetailedPanel() {
   const [isOpen, setIsOpen] = useState(false);
 
   const togglePanel = () => {
@@ -38,3 +38,6 @@ export default function DetailedPanel() {
     </div>
   );
 }
+
+// memo
+export default memo(DetailedPanel);

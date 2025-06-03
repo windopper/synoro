@@ -1,23 +1,18 @@
 'use client';
 
-import { use, useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "../lib/hooks";
-import { calculateStarConnections, initializeStarSystem } from "../lib/features/starSystemSlice";
-import { setCameraPosition } from "../lib/features/cameraSlice";
-import { moveToStar } from "../lib/features/shipSystemsSlice";
-import { useShipSystemsSimulation } from "../hooks/useShipSystemsSimulation";
+import { use, useEffect, memo  } from "react";
+import { useAppDispatch, useAppSelector } from "../../lib/hooks";
+import { calculateStarConnections, initializeStarSystem } from "../../lib/features/starSystemSlice";
+import { setCameraPosition } from "../../lib/features/cameraSlice";
+import { moveToStar } from "../../lib/features/shipSystemsSlice";
 
 // const firstStar = allStars[0];
 
-export default function Initializer({ children }: { children: React.ReactNode }) {
+function Initializer() {
   const dispatch = useAppDispatch();
-  const { stars, initialized } = useAppSelector((state) => state.starSystem);
-  useShipSystemsSimulation({
-    enabled: true,
-    updateInterval: 500,
-    enableRandomEvents: false,
-    enableAutomation: false,
-  })
+  const stars = useAppSelector((state) => state.starSystem.stars);
+  const initialized = useAppSelector((state) => state.starSystem.initialized);
+
 
   useEffect(() => {
     if (!initialized) {
@@ -45,5 +40,8 @@ export default function Initializer({ children }: { children: React.ReactNode })
     }
   }, [dispatch, initialized]);
 
-  return <>{children}</>;
+  return null;
 }
+
+// memo
+export default memo(Initializer);

@@ -7,7 +7,7 @@ interface EnergyManagementProps {
 }
 
 export default function EnergyManagement({ energy }: EnergyManagementProps) {
-  const efficiency = energy.totalGeneration > 0 ? (energy.totalGeneration - energy.totalConsumption) / energy.totalGeneration * 100 : 0;
+  const efficiency = energy.distributionEfficiency;
   const storagePercent = (energy.currentStored / energy.totalStorage) * 100;
 
   return (

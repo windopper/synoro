@@ -339,6 +339,16 @@ export default function ShipStatusOverview() {
           )}
         </div>
       </div>
+
+      {/* Current State */}
+      <div className="border border-purple-600/20 bg-black/50 p-2 rounded-sm">
+        <div className="text-gray-300 font-mono text-xs uppercase tracking-wider mb-2">
+          STATE
+        </div>
+        <div className="text-xs text-gray-500 font-mono">
+          {spaceship.currentState}
+        </div>
+      </div>
     </div>
   );
 }

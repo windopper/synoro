@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { memo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Zap, Clock, AlertCircle, CheckCircle, Settings } from 'lucide-react'
 import { StarData } from '../data/starData'
@@ -18,13 +18,13 @@ interface StellarResourceExtractionDialogProps {
   star: StarData | null
 }
 
-export const StellarResourceExtractionDialog: React.FC<StellarResourceExtractionDialogProps> = ({
+const StellarResourceExtractionDialog: React.FC<StellarResourceExtractionDialogProps> = ({
   isOpen,
   onClose,
   star
 }) => {
   const dispatch = useAppDispatch()
-  const { stellarExtraction } = useAppSelector(state => state.shipSystems)
+  const stellarExtraction = useAppSelector(state => state.shipSystems.stellarExtraction)
   const [selectedResourceType, setSelectedResourceType] = useState<'primary' | 'rare'>('primary')
   const [selectedResource, setSelectedResource] = useState<string>('')
   const [extractionMessage, setExtractionMessage] = useState<string>('')
@@ -32,34 +32,6 @@ export const StellarResourceExtractionDialog: React.FC<StellarResourceExtraction
 
   const activeExtraction = star ? stellarExtraction.activeExtractions[star.id] : null
   const extractionHistory = star ? stellarExtraction.extractionHistory[star.id] : null
-
-  // 진행도 업데이트
-  useEffect(() => {
-    if (!activeExtraction || !star) return
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - activeExtraction.startTime
-      const totalDuration = activeExtraction.estimatedCompletion - activeExtraction.startTime
-      const progress = Math.min(100, (elapsed / totalDuration) * 100)
-
-      dispatch(updateExtractionProgress({ starId: star.id, progress }))
-
-      if (progress >= 100) {
-        dispatch(completeStellarExtraction({ starId: star.id }))
-          .unwrap()
-          .then((result) => {
-            setExtractionMessage(result.message)
-            setTimeout(() => setExtractionMessage(''), 5000)
-          })
-          .catch((error) => {
-            setExtractionError(error.message)
-            setTimeout(() => setExtractionError(''), 5000)
-          })
-      }
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [activeExtraction, star, dispatch])
 
   const handleStartExtraction = async () => {
     if (!star || !selectedResource) return
@@ -350,3 +322,6 @@ export const StellarResourceExtractionDialog: React.FC<StellarResourceExtraction
     </AnimatePresence>
   )
 } 
+
+// memo
+export default memo(StellarResourceExtractionDialog);

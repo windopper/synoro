@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAppSelector } from "../lib/hooks";
 
 const RENDER_DISTANCE = 100; // Adjust this value based on your needs
 
 export function useRenderedStars() {
-  const { stars } = useAppSelector((state) => state.starSystem);
-  const { position } = useAppSelector((state) => state.shipSystems);
+  const stars = useAppSelector((state) => state.starSystem.stars);
+  const position = useAppSelector((state) => state.camera.position);
 
   const renderedStars = useMemo(() => {
     if (position) {

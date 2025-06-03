@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/lib/hooks';
 import { 
@@ -7,7 +9,6 @@ import {
   initializeShipSystemsSimulation,
   diagnoseShipSystems
 } from '@/app/lib/utils/shipSystemsSimulation';
-import { ShipSystemsState } from '@/app/lib/features/shipSystemsSlice';
 
 /**
  * 함선 시스템 시뮬레이션을 관리하는 React Hook
@@ -39,7 +40,7 @@ export function useShipSystemsSimulation(config: {
   
   // 메인 업데이트 루프
   const updateSimulation = useCallback(() => {
-    if (!simulationRef.current || !shipState) return;
+    if (!simulationRef.current) return;
     
     const currentTime = Date.now();
     const deltaTime = (currentTime - lastUpdateTimeRef.current) / 1000;
@@ -49,15 +50,15 @@ export function useShipSystemsSimulation(config: {
     simulationRef.current.updateSystems(shipState, deltaTime);
     
     // 랜덤 이벤트 체크
-    if (config.enableRandomEvents && eventManagerRef.current) {
-      eventManagerRef.current.checkRandomEvents(shipState);
-    }
+    // if (config.enableRandomEvents && eventManagerRef.current) {
+    //   eventManagerRef.current.checkRandomEvents();
+    // }
     
-    // 자동화 시스템 실행
-    if (config.enableAutomation && automationManagerRef.current) {
-      automationManagerRef.current.autoManageEnergy(shipState);
-      automationManagerRef.current.autoManageScanning(shipState);
-    }
+    // // 자동화 시스템 실행
+    // if (config.enableAutomation && automationManagerRef.current) {
+    //   automationManagerRef.current.autoManageEnergy();
+    //   automationManagerRef.current.autoManageScanning();
+    // }
     
   }, [shipState, config.enableRandomEvents, config.enableAutomation]);
 
@@ -89,13 +90,13 @@ export function useShipSystemsSimulation(config: {
   const getDiagnostics = useCallback(() => {
     if (!shipState) return null;
     return diagnoseShipSystems(shipState);
-  }, [shipState]);
+  }, []);
   
   // 업그레이드 제안 가져오기
   const getUpgradeSuggestions = useCallback(() => {
     if (!automationManagerRef.current || !shipState) return [];
     return automationManagerRef.current.suggestUpgrades(shipState);
-  }, [shipState]);
+  }, []);
   
   // 시뮬레이션 상태
   const isRunning = intervalRef.current !== null;
@@ -105,7 +106,7 @@ export function useShipSystemsSimulation(config: {
     triggerUpdate,
     getDiagnostics,
     getUpgradeSuggestions,
-    shipState,
+    // shipState,
     simulation: simulationRef.current,
     eventManager: eventManagerRef.current,
     automationManager: automationManagerRef.current

@@ -3,36 +3,34 @@
 import React, { useState, Suspense, useEffect, useMemo, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars as DreiStars } from '@react-three/drei'
-import { Star } from '../Star'
+import Star from '../Star'
 import { StarTooltip } from '../StarTooltip'
-import { StarMenu } from '../StarMenu'
+import StarMenu from '../StarMenu'
 import { StarInfoPanel } from '../StarInfoPanel'
 import { PlanetTooltip } from '../PlanetTooltip'
-import { StellarResourceExtractionDialog } from '../StellarResourceExtractionDialog'
+import StellarResourceExtractionDialog from '../StellarResourceExtractionDialog'
 import { PlanetSystem } from '../PlanetSystem'
 import { CameraAnimator } from '../CameraAnimator'
 import { StarConnections } from '../StarConnections'
-import { Spaceship } from '../Spaceship'
-import { StarCountInfo } from '../StarCountInfo'
 import { StarSystemTransition } from '../StarSystemTransition'
 import { GalaxyTransition } from '../GalaxyTransition'
-import { allStars, StarData, generateRandomStars } from '../../data/starData'
+import { StarData } from '../../data/starData'
 import { PlanetData } from '../../data/planetData'
-import { useAppDispatch, useAppSelector } from '../../lib/hooks'
-import { calculateStarConnections, initializeStarSystem } from '../../lib/features/starSystemSlice'
+import { useAppDispatch } from '../../lib/hooks'
+import { calculateStarConnections } from '../../lib/features/starSystemSlice'
 import { setCameraPosition } from '@/app/lib/features/cameraSlice'
 import { CameraController } from './CameraController'
 import { useRenderedStars } from '@/app/hooks/useRenderedStars'
 import CommandPanel from '../CommandPanel'
-import { moveToStar } from '@/app/lib/features/shipSystemsSlice'
+import { moveToStar, navigateToStar, navigateToStarWarp } from '@/app/lib/features/shipSystemsSlice'
 import DetailedPanel from '../DetailedPanel'
+import ProgressIndicatorWrapper from '../indicator/ProgressIndicatorWrapper'
+import StarNavigationCompactPanel from '../StarNavigationCompactPanel'
 
 const RENDER_DISTANCE = 100 // Distance at which stars are rendered
 
 export const StarsScene: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { initialized, stars } = useAppSelector(state => state.starSystem)
-  const spaceship = useAppSelector(state => state.shipSystems)
   const renderedStars = useRenderedStars();
   
   const [hoveredStar, setHoveredStar] = useState<StarData | null>(null)
@@ -135,10 +133,15 @@ export const StarsScene: React.FC = () => {
 
   const handleMoveSpaceshipTo = useCallback(() => {
     if (menuStar) {
-      dispatch(moveToStar({ 
-        starId: menuStar.id, 
-        position: menuStar.position 
-      }))
+      // dispatch(navigateToStar({
+      //   mode: 'normal',
+      //   star: menuStar,
+      // }))
+      dispatch(navigateToStarWarp({ star: menuStar }))
+      // dispatch(moveToStar({ 
+      //   starId: menuStar.id, 
+      //   position: menuStar.position 
+      // }))
       dispatch(calculateStarConnections({
         stars: renderedStars,
         spaceship: {
@@ -153,12 +156,12 @@ export const StarsScene: React.FC = () => {
     }
   }, [menuStar, dispatch])
 
-  const handleGoToSpaceshipLocation = useCallback(() => {
-    if (spaceship.currentStarId) {
-      dispatch(setCameraPosition({ x: spaceship.position.x, y: spaceship.position.y, z: spaceship.position.z }))
-      console.log('Going to spaceship location:', spaceship)
-    }
-  }, [spaceship.currentStarId, dispatch])
+  // const handleGoToSpaceshipLocation = useCallback(() => {
+  //   if (shipCurrentStarId) {
+  //     dispatch(setCameraPosition({ x: shipPosition.x, y: shipPosition.y, z: shipPosition.z }))
+  //     console.log('Going to spaceship location:', shipPosition)
+  //   }
+  // }, [shipCurrentStarId, dispatch])
 
   const handleViewStarInfo = useCallback(() => {
     if (menuStar) {
@@ -258,6 +261,8 @@ export const StarsScene: React.FC = () => {
           )}
         </Suspense>
 
+        <StarNavigationCompactPanel />
+
         {/* 함선 렌더링 */}
         {/* {!showPlanetSystem && <Spaceship />} */}
 
@@ -308,22 +313,22 @@ export const StarsScene: React.FC = () => {
       />
 
       {/* Tooltip overlay */}
-      {hoveredStar && !showPlanetSystem && !showStarMenu && (
+      {/* {hoveredStar && !showPlanetSystem && !showStarMenu && (
         <StarTooltip
           star={hoveredStar}
           position={tooltipPosition}
           visible={!!hoveredStar}
         />
-      )}
+      )} */}
 
       {/* 행성 툴팁 */}
-      {hoveredPlanet && showPlanetSystem && (
+      {/* {hoveredPlanet && showPlanetSystem && (
         <PlanetTooltip
           planet={hoveredPlanet}
           position={planetTooltipPosition}
           visible={!!hoveredPlanet}
         />
-      )}
+      )} */}
 
       {/* 백투갤럭시 버튼 */}
       {(targetStar || showPlanetSystem) && !isReturningToGalaxy && (
@@ -338,15 +343,6 @@ export const StarsScene: React.FC = () => {
         </div>
       )}
 
-      {/* Star count info */}
-      {/* <StarCountInfo
-        stars={renderedStars}
-        showPlanetSystem={showPlanetSystem}
-        selectedStar={selectedStar}
-        isAnimating={isAnimating}
-        allStars={allStars}
-      /> */}
-
       {/* Selected star info panel */}
       {selectedStar && !showPlanetSystem && !isAnimating && (
         <StarInfoPanel
@@ -357,9 +353,10 @@ export const StarsScene: React.FC = () => {
 
       <CommandPanel />
       <DetailedPanel />
+      <ProgressIndicatorWrapper />
 
       {/* Selected planet info panel */}
-      {selectedPlanet && showPlanetSystem && (
+      {/* {selectedPlanet && showPlanetSystem && (
         <div className="absolute top-4 right-4 z-10 max-w-sm">
           <div className="bg-black/90 backdrop-blur-sm rounded-xl p-4 text-white border border-gray-700">
             <div className="flex justify-between items-start mb-3">
@@ -414,7 +411,7 @@ export const StarsScene: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

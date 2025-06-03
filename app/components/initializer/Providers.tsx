@@ -1,8 +1,8 @@
 'use client'
 
+import { store } from '@/app/lib/store'
 import React from 'react'
 import { Provider } from 'react-redux'
-import { store } from '../lib/store'
 
 interface ProvidersProps {
   children: React.ReactNode

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useAppSelector } from "../lib/hooks";
 import ShipStatusOverview from "./ship/ShipStatusOverview";
 import NavigationPanel from "./navigation/NavigationPanel";
@@ -8,7 +8,7 @@ import SystemDiagnosticsPanel from "./systems/SystemDiagnosticsPanel";
 import TabButton from "./ui/TabButton";
 import { Navigation, Ship, Cpu, Settings } from "lucide-react";
 
-export default function CommandPanel() {
+function CommandPanel() {
   const [isOpen, setIsOpen] = useState(true);
   const [view, setView] = useState<"nav" | "ship" | "systems" | "settings">(
     "nav"
@@ -120,3 +120,7 @@ export default function CommandPanel() {
     </div>
   );
 }
+
+
+// memo
+export default memo(CommandPanel);

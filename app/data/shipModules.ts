@@ -209,7 +209,7 @@ export const POWER_MODULES: CompleteModuleInfo[] = [
     tier: 0,
     category: ModuleCategory.POWER,
     description: '기본적인 에너지 저장 장치입니다.',
-    energyConsumption: { base: 2, max: 10 },
+    energyConsumption: { base: 0, max: 0 },
     requiredResources: { '납 배터리 셀': 10, 알루미늄: 15, '기본 회로': 5 },
     durability: 70,
     performance: {
@@ -220,6 +220,10 @@ export const POWER_MODULES: CompleteModuleInfo[] = [
 ];
 
 // === 항행 시스템 모듈 정의 ===
+export const NAVIGATION_MODULE_ENGINE_PREFIX = 'SE_';
+export const NAVIGATION_MODULE_WARP_PREFIX = 'WD_';
+export const NAVIGATION_MODULE_NAVIGATION_PREFIX = 'NC_';
+
 export const NAVIGATION_MODULES: CompleteModuleInfo[] = [
   // 엔진 시리즈
   {
@@ -270,7 +274,7 @@ export const NAVIGATION_MODULES: CompleteModuleInfo[] = [
     upgradeCost: 300,
     durability: 60,
     performance: {
-      warpRange: 5,
+      warpRange: 200,
       warpPrepTime: 60,
       warpAccuracy: 70
     } as NavigationModulePerformance

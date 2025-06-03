@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useMemo, useCallback } from 'react'
+import React, { useRef, useState, useMemo, useCallback, memo, useEffect } from 'react'
 import { Mesh } from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { StarData } from '../data/starData'
@@ -12,7 +12,7 @@ interface StarProps {
   opacity?: number;
 }
 
-export const Star: React.FC<StarProps> = React.memo(({ star, onHover, onClick, opacity = 1 }) => {
+const Star: React.FC<StarProps> = React.memo(({ star, onHover, onClick, opacity = 1 }) => {
   const meshRef = useRef<Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const [clicked, setClicked] = useState(false)
@@ -111,8 +111,8 @@ export const Star: React.FC<StarProps> = React.memo(({ star, onHover, onClick, o
       {/* Main star sphere - simplified geometry */}
       <mesh
         ref={meshRef}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
+        // onPointerOver={handlePointerOver}
+        // onPointerOut={handlePointerOut}
         onClick={handleClick}
         scale={hovered ? 1.2 : clicked ? 0.9 : 1} // Reduced scale effect
       >
@@ -169,3 +169,6 @@ export const Star: React.FC<StarProps> = React.memo(({ star, onHover, onClick, o
 })
 
 Star.displayName = 'Star'
+
+// memo
+export default memo(Star);

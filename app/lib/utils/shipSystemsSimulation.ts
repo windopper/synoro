@@ -12,13 +12,16 @@ import {
   recalculateEnergySystems,
   addResearchPoints,
   updateResearchProgress,
-  completeResearch
+  completeResearch,
+  updateExtractionProgress,
+  completeStellarExtraction
 } from '../features/shipSystemsSlice';
 import { 
   calculateShipPerformance,
   autoDistributeEnergy 
 } from './shipPerformanceUtils';
-import { AppDispatch } from '../store';
+import { NavigationSystemManager } from './navigationSystem';
+import { AppDispatch, store } from '../store';
 import { getModuleById } from '@/app/data/shipModules';
 import { getResearchById } from '@/app/data/researchTechs';
 
@@ -27,9 +30,11 @@ export class ShipSystemsSimulation {
   private dispatch: AppDispatch;
   private intervalId: NodeJS.Timeout | null = null;
   private lastUpdateTime: number = Date.now();
+  private navigationManager: NavigationSystemManager;
   
   constructor(dispatch: AppDispatch) {
     this.dispatch = dispatch;
+    this.navigationManager = new NavigationSystemManager(dispatch);
   }
   
   /**
@@ -75,6 +80,15 @@ export class ShipSystemsSimulation {
     this.updateShieldSystems(state, deltaTime);
     this.updateUpgradeQueue(state, deltaTime);
     this.updateResearchSystem(state, deltaTime);
+    // 새로운 항법 시스템 사용
+    this.navigationManager.updateNavigationSystem(state, deltaTime);
+  }
+  
+  /**
+   * 항법 시스템 관리자 가져오기
+   */
+  getNavigationManager(): NavigationSystemManager {
+    return this.navigationManager;
   }
   
   /**
@@ -104,6 +118,7 @@ export class ShipSystemsSimulation {
     }
     
     this.dispatch(updateEnergyStorage(newStoredEnergy));
+    this.dispatch(recalculateEnergySystems());
   }
   
   /**
@@ -181,16 +196,25 @@ export class ShipSystemsSimulation {
   private updateExtractionSystems(state: ShipSystemsState, deltaTime: number): void {
     const performance = calculateShipPerformance(state);
     const extractionRate = performance.resource.maxExtractionRate;
-    
-    if (extractionRate > 0 && this.isNearResource(state)) {
-      // 자원 채취 진행
-      const extractedAmount = extractionRate * deltaTime;
-      const resourceType = this.getCurrentResourceType(state);
-      
-      if (resourceType && state.resources.currentCapacity + extractedAmount <= state.resources.maxCapacity) {
-        this.dispatch(addResources({ [resourceType]: extractedAmount }));
+
+    Object.entries(state.stellarExtraction.activeExtractions).forEach(([starId, extraction]) => {
+      if (extraction.progress < 100) {
+        // 기본 진행 속도: 시간 기반으로 계산
+        // 기본 채취 시간을 60초로 가정하고, extractionRate가 0이면 기본값 사용
+        const baseProgressRate = 100 / 60; // 60초에 100% 완료
+        const rateBonus = extractionRate > 0 ? (1 + extractionRate / 10) : 1; // extractionRate를 보너스로 적용
+        
+        const progressIncrement = baseProgressRate * rateBonus * deltaTime;
+        const newProgress = Math.min(100, extraction.progress + progressIncrement);
+
+        this.dispatch(updateExtractionProgress({ starId, progress: newProgress }));
+
+        if (newProgress >= 100) {
+          console.log(`✅ 채취 완료: ${starId}`);
+          this.dispatch(completeStellarExtraction({ starId }));
+        }
       }
-    }
+    });
   }
   
   /**
@@ -237,6 +261,8 @@ export class ShipSystemsSimulation {
     this.checkResearchCompletion(state);
   }
   
+  
+
   /**
    * 연구 포인트 생성
    */
@@ -376,6 +402,8 @@ export class ShipSystemsSimulation {
     }
   }
   
+
+
   /**
    * 헬퍼 메서드들
    */
@@ -751,11 +779,13 @@ export function initializeShipSystemsSimulation(dispatch: AppDispatch) {
   const simulation = new ShipSystemsSimulation(dispatch);
   const eventManager = new ShipSystemsEventManager(dispatch);
   const automationManager = new AutomationManager(dispatch);
+  const navigationManager = simulation.getNavigationManager();
   
   return {
     simulation,
     eventManager,
-    automationManager
+    automationManager,
+    navigationManager
   };
 }
 

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./components/Providers";
-import Initializer from "./components/Initiailizer";
+import { Providers } from "@/app/components/initializer/Providers";
+import Initializer from "@/app/components/initializer/Initializer";
+import ShipSimulationInitializer from "@/app/components/initializer/ShipSimulationInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Initializer>{children}</Initializer>
+          <Initializer />
+          <ShipSimulationInitializer />
+          {children}
         </Providers>
       </body>
     </html>
