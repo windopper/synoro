@@ -12,6 +12,28 @@ import {
 import { getResearchById } from "../../data/researchTechs";
 import { StarData } from "../../data/starData";
 import { RootState } from "../store";
+import {
+  startStellarExtraction,
+  completeStellarExtraction,
+  handleStartStellarExtractionFulfilled,
+  handleStartStellarExtractionRejected,
+  handleCompleteStellarExtractionFulfilled,
+  handleCompleteStellarExtractionRejected,
+} from "./actions/shipStellarExtractionAction";
+import {
+  navigateToStar,
+  navigateToStarWarp,
+  completeNavigation,
+  cancelNavigation,
+  handleNavigateToStarFulfilled,
+  handleNavigateToStarRejected,
+  handleNavigateToStarWarpFulfilled,
+  handleNavigateToStarWarpRejected,
+  handleCompleteNavigationFulfilled,
+  handleCompleteNavigationRejected,
+  handleCancelNavigationFulfilled,
+  handleCancelNavigationRejected,
+} from "./actions/shipNavigationAction";
 
 // === 상태 인터페이스 정의 ===
 
@@ -115,7 +137,7 @@ export interface ShipSystemsState {
     travelTime: number;
     travelSpeed: number;
     estimatedCompletion: number;
-  }
+  };
 
   // 업그레이드 및 제작 큐
   upgradeQueue: {
@@ -234,7 +256,10 @@ function _recalculateEnergySystems(state: ShipSystemsState): void {
     }
   });
 
-  state.energy.distributionEfficiency = totalGeneration > 0 ? (totalGeneration - totalConsumption) / totalGeneration * 100 : 0;
+  state.energy.distributionEfficiency =
+    totalGeneration > 0
+      ? ((totalGeneration - totalConsumption) / totalGeneration) * 100
+      : 0;
   state.energy.totalGeneration = totalGeneration;
   state.energy.totalConsumption = totalConsumption;
   state.energy.totalStorage = totalStorage;
@@ -315,7 +340,7 @@ const initialState: ShipSystemsState = {
   shipName: "Synoro Explorer",
   currentStarId: null,
   position: { x: 0, y: 0, z: 0 },
-  currentState: 'idle',
+  currentState: "idle",
 
   installedModules: {
     // 기본 설치 모듈들 (T0 모듈들)
@@ -612,126 +637,6 @@ export const runSystemDiagnostics = createAsyncThunk(
   }
 );
 
-// 항성 자원 채취 시작
-export const startStellarExtraction = createAsyncThunk(
-  "shipSystems/startStellarExtraction",
-  async (
-    params: {
-      star: StarData;
-      extractionType: "primary" | "rare";
-      resourceType: string;
-    },
-    { getState }
-  ) => {
-    const state = getState() as { shipSystems: ShipSystemsState };
-
-    if (!params.star.stellarResources) {
-      throw new Error("이 항성에서는 자원을 채취할 수 없습니다");
-    }
-
-    const resources = params.star.stellarResources;
-    const history =
-      state.shipSystems.stellarExtraction.extractionHistory[params.star.id];
-
-    // 시간당 최대 채취 횟수 확인
-    if (history && resources.maxExtractionsPerHour) {
-      const currentHour = Math.floor(Date.now() / (1000 * 60 * 60));
-      const historyHour = Math.floor(history.lastExtraction / (1000 * 60 * 60));
-
-      const extractionsThisHour =
-        currentHour === historyHour ? history.extractionsThisHour : 0;
-
-      if (extractionsThisHour >= resources.maxExtractionsPerHour) {
-        throw new Error(
-          `이 항성에서는 시간당 최대 ${resources.maxExtractionsPerHour}회만 채취할 수 있습니다`
-        );
-      }
-    }
-
-    // 채취 장비 확인
-    const extractionModule = Object.values(
-      state.shipSystems.installedModules
-    ).find((module) => {
-      const moduleInfo = getModuleById(module.id);
-      return (
-        moduleInfo?.category === ModuleCategory.RESOURCE &&
-        moduleInfo.id.startsWith("RE_")
-      );
-    });
-
-    if (!extractionModule) {
-      throw new Error("자원 채취를 위해서는 활성화된 채광 장비가 필요합니다");
-    }
-
-    // 난이도에 따른 채취 시간 계산
-    const baseDuration = {
-      easy: 30, // 30초
-      medium: 60, // 1분
-      hard: 120, // 2분
-      extreme: 300, // 5분
-    }[resources.extractionDifficulty];
-
-    // 예상 수확량 계산
-    const targetResources =
-      params.extractionType === "primary"
-        ? resources.primaryResources
-        : resources.rareResources || {};
-
-    const baseYield = targetResources[params.resourceType] || 0;
-    const expectedYield = Math.floor(baseYield * (0.8 + Math.random() * 0.4)); // 80-120% 변동
-
-    if (expectedYield === 0) {
-      throw new Error("선택한 자원을 이 항성에서 채취할 수 없습니다");
-    }
-
-    return {
-      starId: params.star.id,
-      extractionType: params.extractionType,
-      resourceType: params.resourceType,
-      duration: baseDuration,
-      expectedYield,
-    };
-  }
-);
-
-// 항성 자원 채취 완료 처리
-export const completeStellarExtraction = createAsyncThunk(
-  "shipSystems/completeStellarExtraction",
-  async (params: { starId: string }, { getState }) => {
-    const state = getState() as { shipSystems: ShipSystemsState };
-    const extraction =
-      state.shipSystems.stellarExtraction.activeExtractions[params.starId];
-
-    if (!extraction) {
-      throw new Error("진행 중인 채취 작업이 없습니다");
-    }
-
-    // 성공률 계산 (진행도에 따라)
-    const successRate = Math.min(0.95, 0.5 + (extraction.progress / 100) * 0.5);
-    const isSuccess = Math.random() < successRate;
-
-    if (!isSuccess) {
-      return {
-        success: false,
-        starId: params.starId,
-        message: "채취 작업이 실패했습니다. 일부 자원만 회수되었습니다.",
-        recoveredResources: {
-          [extraction.resourceType]: Math.floor(extraction.expectedYield * 0.3),
-        },
-      };
-    }
-
-    return {
-      success: true,
-      starId: params.starId,
-      message: "자원 채취가 성공적으로 완료되었습니다!",
-      obtainedResources: {
-        [extraction.resourceType]: extraction.expectedYield,
-      },
-    };
-  }
-);
-
 // === Redux Slice ===
 export const shipSystemsSlice = createSlice({
   name: "shipSystems",
@@ -891,6 +796,28 @@ export const shipSystemsSlice = createSlice({
       ).reduce((sum, amount) => sum + amount, 0);
     },
 
+    // === 항법 관리 ===
+    updateNavigationProgress: (
+      state,
+      action: PayloadAction<{
+        progress: number;
+        travelSpeed: number;
+        travelTime: number;
+        estimatedCompletion: number;
+      }>
+    ) => {
+      if (state.navigation) {
+        state.navigation.travelProgress = Math.max(
+          0,
+          Math.min(100, action.payload.progress)
+        );
+        state.navigation.travelSpeed = action.payload.travelSpeed;
+        state.navigation.travelTime = action.payload.travelTime;
+        state.navigation.estimatedCompletion =
+          action.payload.estimatedCompletion;
+      }
+    },
+
     // === 탐사 관리 ===
     startScan: (
       state,
@@ -926,112 +853,6 @@ export const shipSystemsSlice = createSlice({
     },
 
     // === 항법 관리 ===
-    navigateToStar: (
-      state,
-      action: PayloadAction<{ star: StarData; mode: "warp" | "normal" }>
-    ) => {
-      const { star, mode } = action.payload;
-      state.navigation = {
-        navigationMode: mode,
-        targetStarId: star.id,
-        targetPosition: star.position,
-        travelProgress: 0,
-        travelTime: 0,
-        travelSpeed: 0,
-        estimatedCompletion: 0,
-      };
-      state.currentState = 'moving';
-
-      // 항해 모듈 활성화
-      Object.entries(state.installedModules).forEach(([moduleId, module]) => {
-        if (module.id.startsWith(NAVIGATION_MODULE_ENGINE_PREFIX)) {
-          module.isActive = true;
-          module.energyAllocation = 100;
-        }
-      });
-
-      _recalculateEnergySystems(state);
-    },
-
-    navigateToStarWarp: (
-      state,
-      action: PayloadAction<{ star: StarData }>
-    ) => {
-      const { star } = action.payload;
-      state.navigation = {
-        navigationMode: 'warp',
-        targetStarId: star.id,
-        targetPosition: star.position,
-        travelProgress: 0,
-        travelTime: 0,
-        travelSpeed: 0,
-        estimatedCompletion: 0,
-      };
-      state.currentState = 'moving';
-
-      // 항해 모듈 활성화
-      Object.entries(state.installedModules).forEach(([moduleId, module]) => {
-        if (module.id.startsWith(NAVIGATION_MODULE_ENGINE_PREFIX)) {
-          module.isActive = true;
-          module.energyAllocation = 100;
-        }
-      }); 
-
-      _recalculateEnergySystems(state);
-    },
-
-    updateNavigationProgress: (
-      state,
-      action: PayloadAction<{
-        progress: number;
-        travelSpeed: number;
-        travelTime: number;
-        estimatedCompletion: number;
-      }>
-    ) => {
-      if (state.navigation) {
-        state.navigation.travelProgress = Math.max(
-          0,
-          Math.min(100, action.payload.progress)
-        );
-        state.navigation.travelSpeed = action.payload.travelSpeed;
-        state.navigation.travelTime = action.payload.travelTime;
-        state.navigation.estimatedCompletion = action.payload.estimatedCompletion;
-      }
-    },
-
-    completeNavigation: (state) => {
-      if (state.navigation) {
-        state.currentStarId = state.navigation.targetStarId;
-        state.position = state.navigation.targetPosition;
-        state.currentState = 'idle';
-        state.navigation = undefined;
-      }
-
-      // 항해 모듈 비활성화
-      Object.entries(state.installedModules).forEach(([moduleId, module]) => {
-        if (module.id.startsWith(NAVIGATION_MODULE_ENGINE_PREFIX)) {
-          module.isActive = false;
-          module.energyAllocation = 0;
-        }
-      });
-
-      _recalculateEnergySystems(state);
-    },
-
-    cancelNavigation: (state) => {
-      state.navigation = undefined;
-      state.currentState = 'idle';
-
-      // 항해 모듈 비활성화
-      Object.entries(state.installedModules).forEach(([moduleId, module]) => {
-        if (module.id.startsWith(NAVIGATION_MODULE_ENGINE_PREFIX)) {
-          module.isActive = false;
-        }
-      });
-
-      _recalculateEnergySystems(state);
-    },
 
     // === 통신 관리 ===
     updateCommunicationStatus: (
@@ -1447,128 +1268,56 @@ export const shipSystemsSlice = createSlice({
 
       // 항성 자원 채취 시작
       .addCase(startStellarExtraction.fulfilled, (state, action) => {
-        const {
-          starId,
-          extractionType,
-          resourceType,
-          duration,
-          expectedYield,
-        } = action.payload;
-
-        state.stellarExtraction.activeExtractions[starId] = {
-          startTime: Date.now(),
-          extractionType,
-          estimatedCompletion: Date.now() + duration * 1000,
-          progress: 0,
-          resourceType,
-          expectedYield,
-        };
-
-        // 함선 상태 변경
-        state.currentState = "extraction";
-
-        // 채취 장비 활성화
-        const extractionModuleEntry = Object.entries(
-          state.installedModules
-        ).find(([_, module]) => {
-          const moduleInfo = getModuleById(module.id);
-          return (
-            moduleInfo?.category === ModuleCategory.RESOURCE &&
-            moduleInfo.id.startsWith("RE_")
-          );
-        });
-
-        if (extractionModuleEntry) {
-          const [moduleId, module] = extractionModuleEntry;
-          module.isActive = true;
-          module.energyAllocation = 100; // 최대 에너지 할당
-          // 에너지 시스템 재계산
-          _recalculateEnergySystems(state);
-        } else {
-          console.warn("⚠️ 자원 채취 장비가 설치되지 않았습니다.");
-        }
+        handleStartStellarExtractionFulfilled(state, action);
+        _recalculateEnergySystems(state);
       })
       .addCase(startStellarExtraction.rejected, (state, action) => {
-        console.error("항성 자원 채취 시작 실패:", action.error.message);
+        handleStartStellarExtractionRejected(state, action);
       })
 
       // 항성 자원 채취 완료
       .addCase(completeStellarExtraction.fulfilled, (state, action) => {
-        const { success, starId, obtainedResources, recoveredResources } =
-          action.payload;
-
-        // 함선 상태 변경
-        state.currentState = "idle";
-
-        // 채취 작업 제거
-        delete state.stellarExtraction.activeExtractions[starId];
-
-        // 채취 장비 비활성화 및 내구도 감소
-        const extractionModuleEntry = Object.entries(
-          state.installedModules
-        ).find(([_, module]) => {
-          const moduleInfo = getModuleById(module.id);
-          return (
-            moduleInfo?.category === ModuleCategory.RESOURCE &&
-            moduleInfo.id.startsWith("RE_")
-          );
-        });
-
-        if (extractionModuleEntry) {
-          const [moduleId, module] = extractionModuleEntry;
-          module.isActive = false;
-          module.currentDurability = Math.max(0, module.currentDurability - 10);
-
-          console.log(
-            `🔧 채취 장비 비활성화: ${moduleId}, 내구도: ${module.currentDurability}`
-          );
-
-          // 에너지 시스템 재계산
-          _recalculateEnergySystems(state);
-        }
-
-        // 자원 추가
-        const resourcesToAdd = success ? obtainedResources : recoveredResources;
-        if (resourcesToAdd) {
-          Object.entries(resourcesToAdd).forEach(([resource, amount]) => {
-            state.resources.inventory[resource] =
-              (state.resources.inventory[resource] || 0) + amount;
-          });
-
-          // 현재 용량 재계산
-          state.resources.currentCapacity = Object.values(
-            state.resources.inventory
-          ).reduce((sum, amount) => sum + amount, 0);
-        }
-
-        // 채취 이력 업데이트 (여기서는 직접 업데이트)
-        const currentTime = Date.now();
-        const currentHour = Math.floor(currentTime / (1000 * 60 * 60));
-
-        if (!state.stellarExtraction.extractionHistory[starId]) {
-          state.stellarExtraction.extractionHistory[starId] = {
-            lastExtraction: currentTime,
-            totalExtractions: 1,
-            extractionsThisHour: 1,
-          };
-        } else {
-          const history = state.stellarExtraction.extractionHistory[starId];
-          const lastHour = Math.floor(
-            history.lastExtraction / (1000 * 60 * 60)
-          );
-
-          history.lastExtraction = currentTime;
-          history.totalExtractions += 1;
-
-          if (currentHour === lastHour) {
-            history.extractionsThisHour += 1;
-          } else {
-            history.extractionsThisHour = 1;
-          }
-        }
+        handleCompleteStellarExtractionFulfilled(state, action);
+        _recalculateEnergySystems(state);
       })
       .addCase(completeStellarExtraction.rejected, (state, action) => {
-        console.error("항성 자원 채취 완료 처리 실패:", action.error.message);
+        handleCompleteStellarExtractionRejected(state, action);
+      })
+
+      // 항법 시작
+      .addCase(navigateToStar.fulfilled, (state, action) => {
+        handleNavigateToStarFulfilled(state, action);
+        _recalculateEnergySystems(state);
+      })
+      .addCase(navigateToStar.rejected, (state, action) => {
+        handleNavigateToStarRejected(state, action);
+      })
+
+      // 워프 항법 시작
+      .addCase(navigateToStarWarp.fulfilled, (state, action) => {
+        handleNavigateToStarWarpFulfilled(state, action);
+        _recalculateEnergySystems(state);
+      })
+      .addCase(navigateToStarWarp.rejected, (state, action) => {
+        handleNavigateToStarWarpRejected(state, action);
+      })
+
+      // 항법 완료
+      .addCase(completeNavigation.fulfilled, (state, action) => {
+        handleCompleteNavigationFulfilled(state, action);
+        _recalculateEnergySystems(state);
+      })
+      .addCase(completeNavigation.rejected, (state, action) => {
+        handleCompleteNavigationRejected(state, action);
+      })
+
+      // 항법 취소
+      .addCase(cancelNavigation.fulfilled, (state, action) => {
+        handleCancelNavigationFulfilled(state, action);
+        _recalculateEnergySystems(state);
+      })
+      .addCase(cancelNavigation.rejected, (state, action) => {
+        handleCancelNavigationRejected(state, action);
       });
   },
 });
@@ -1609,12 +1358,18 @@ export const {
   updateExtractionProgress,
   cancelStellarExtraction,
   updateExtractionHistory,
-  navigateToStar,
   updateNavigationProgress,
+} = shipSystemsSlice.actions;
+
+// 분리된 thunk 액션들 재내보내기
+export {
+  startStellarExtraction,
+  completeStellarExtraction,
+  navigateToStar,
+  navigateToStarWarp,
   completeNavigation,
   cancelNavigation,
-  navigateToStarWarp,
-} = shipSystemsSlice.actions;
+};
 
 // === 기본 내보내기 ===
 export default shipSystemsSlice.reducer;

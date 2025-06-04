@@ -1,160 +1,192 @@
-'use client'
+"use client";
 
-import React, { useState, Suspense, useEffect, useMemo, useCallback } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stars as DreiStars } from '@react-three/drei'
-import Star from '../Star'
-import { StarTooltip } from '../StarTooltip'
-import StarMenu from '../StarMenu'
-import { StarInfoPanel } from '../StarInfoPanel'
-import { PlanetTooltip } from '../PlanetTooltip'
-import StellarResourceExtractionDialog from '../StellarResourceExtractionDialog'
-import { PlanetSystem } from '../PlanetSystem'
-import { CameraAnimator } from '../CameraAnimator'
-import { StarConnections } from '../StarConnections'
-import { StarSystemTransition } from '../StarSystemTransition'
-import { GalaxyTransition } from '../GalaxyTransition'
-import { StarData } from '../../data/starData'
-import { PlanetData } from '../../data/planetData'
-import { useAppDispatch } from '../../lib/hooks'
-import { calculateStarConnections } from '../../lib/features/starSystemSlice'
-import { setCameraPosition } from '@/app/lib/features/cameraSlice'
-import { CameraController } from './CameraController'
-import { useRenderedStars } from '@/app/hooks/useRenderedStars'
-import CommandPanel from '../CommandPanel'
-import { moveToStar, navigateToStar, navigateToStarWarp } from '@/app/lib/features/shipSystemsSlice'
-import DetailedPanel from '../DetailedPanel'
-import ProgressIndicatorWrapper from '../indicator/ProgressIndicatorWrapper'
-import StarNavigationCompactPanel from '../StarNavigationCompactPanel'
+import React, {
+  useState,
+  Suspense,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Stars as DreiStars } from "@react-three/drei";
+import Star from "../Star";
+import { StarTooltip } from "../StarTooltip";
+import StarMenu from "../StarMenu";
+import { StarInfoPanel } from "../StarInfoPanel";
+import { PlanetTooltip } from "../PlanetTooltip";
+import StellarResourceExtractionDialog from "../StellarResourceExtractionDialog";
+import { PlanetSystem } from "../PlanetSystem";
+import { CameraAnimator } from "../CameraAnimator";
+import { StarConnections } from "../StarConnections";
+import { StarSystemTransition } from "../StarSystemTransition";
+import { GalaxyTransition } from "../GalaxyTransition";
+import { StarData } from "../../data/starData";
+import { PlanetData } from "../../data/planetData";
+import { useAppDispatch } from "../../lib/hooks";
+import { calculateStarConnections } from "../../lib/features/starSystemSlice";
+import { setCameraPosition } from "@/app/lib/features/cameraSlice";
+import { CameraController } from "./CameraController";
+import { useRenderedStars } from "@/app/hooks/useRenderedStars";
+import CommandPanel from "../CommandPanel";
+import {
+  moveToStar,
+  navigateToStar,
+  navigateToStarWarp,
+} from "@/app/lib/features/shipSystemsSlice";
+import DetailedPanel from "../DetailedPanel";
+import ProgressIndicatorWrapper from "../indicator/ProgressIndicatorWrapper";
+import StarNavigationCompactPanel from "../StarNavigationCompactPanel";
 
-const RENDER_DISTANCE = 100 // Distance at which stars are rendered
+const RENDER_DISTANCE = 100; // Distance at which stars are rendered
 
 export const StarsScene: React.FC = () => {
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
   const renderedStars = useRenderedStars();
-  
-  const [hoveredStar, setHoveredStar] = useState<StarData | null>(null)
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
-  const [selectedStar, setSelectedStar] = useState<StarData | null>(null)
-  
+
+  const [hoveredStar, setHoveredStar] = useState<StarData | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [selectedStar, setSelectedStar] = useState<StarData | null>(null);
+
   // 별 메뉴 관련 상태 추가
-  const [showStarMenu, setShowStarMenu] = useState(false)
-  const [menuStar, setMenuStar] = useState<StarData | null>(null)
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
-  
+  const [showStarMenu, setShowStarMenu] = useState(false);
+  const [menuStar, setMenuStar] = useState<StarData | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+
   // 행성 관련 상태
-  const [hoveredPlanet, setHoveredPlanet] = useState<PlanetData | null>(null)
-  const [planetTooltipPosition, setPlanetTooltipPosition] = useState({ x: 0, y: 0 })
-  const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null)
-  const [targetStar, setTargetStar] = useState<StarData | null>(null) // 항성계로 이동할 때 사용
-  const [showPlanetSystem, setShowPlanetSystem] = useState(false)
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [isReturningToGalaxy, setIsReturningToGalaxy] = useState(false) // 갤럭시로 돌아가는 애니메이션 상태
-  
+  const [hoveredPlanet, setHoveredPlanet] = useState<PlanetData | null>(null);
+  const [planetTooltipPosition, setPlanetTooltipPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
+  const [targetStar, setTargetStar] = useState<StarData | null>(null); // 항성계로 이동할 때 사용
+  const [showPlanetSystem, setShowPlanetSystem] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isReturningToGalaxy, setIsReturningToGalaxy] = useState(false); // 갤럭시로 돌아가는 애니메이션 상태
+
   // 자원 획득 다이얼로그 상태
-  const [showResourceDialog, setShowResourceDialog] = useState(false)
-  const [resourceDialogStar, setResourceDialogStar] = useState<StarData | null>(null)
+  const [showResourceDialog, setShowResourceDialog] = useState(false);
+  const [resourceDialogStar, setResourceDialogStar] = useState<StarData | null>(
+    null
+  );
 
-  const handleStarHover = useCallback((star: StarData | null, position: { x: number; y: number }) => {
-    setHoveredStar(star)
-    setTooltipPosition(position)
-  }, [])
+  const handleStarHover = useCallback(
+    (star: StarData | null, position: { x: number; y: number }) => {
+      setHoveredStar(star);
+      setTooltipPosition(position);
+    },
+    []
+  );
 
-  const handleStarClick = useCallback((star: StarData, position: { x: number; y: number }) => {
-    // 메뉴가 이미 열려있으면 닫기
-    if (showStarMenu) {
-      setShowStarMenu(false)
-      setMenuStar(null)
-      return
-    }
-    
-    // 메뉴 표시
-    setMenuStar(star)
-    setMenuPosition(position)
-    setShowStarMenu(true)
-    console.log('Star menu opened for:', star)
-  }, [showStarMenu])
+  const handleStarClick = useCallback(
+    (star: StarData, position: { x: number; y: number }) => {
+      // 메뉴가 이미 열려있으면 닫기
+      if (showStarMenu) {
+        setShowStarMenu(false);
+        setMenuStar(null);
+        return;
+      }
 
-  const handlePlanetHover = useCallback((planet: PlanetData | null, position: { x: number; y: number }) => {
-    setHoveredPlanet(planet)
-    setPlanetTooltipPosition(position)
-  }, [])
+      // 메뉴 표시
+      setMenuStar(star);
+      setMenuPosition(position);
+      setShowStarMenu(true);
+      console.log("Star menu opened for:", star);
+    },
+    [showStarMenu]
+  );
+
+  const handlePlanetHover = useCallback(
+    (planet: PlanetData | null, position: { x: number; y: number }) => {
+      setHoveredPlanet(planet);
+      setPlanetTooltipPosition(position);
+    },
+    []
+  );
 
   const handlePlanetClick = useCallback((planet: PlanetData) => {
-    setSelectedPlanet(planet)
-    console.log('Selected planet:', planet)
-  }, [])
+    setSelectedPlanet(planet);
+    console.log("Selected planet:", planet);
+  }, []);
 
   const handleAnimationStart = useCallback(() => {
-    setIsAnimating(true)
-    setShowPlanetSystem(false)
-  }, [])
+    setIsAnimating(true);
+    setShowPlanetSystem(false);
+  }, []);
 
   const handleAnimationComplete = useCallback(() => {
-    setIsAnimating(false)
-    setShowPlanetSystem(true)
-  }, [])
+    setIsAnimating(false);
+    setShowPlanetSystem(true);
+  }, []);
 
   const handleTransitionAnimationStart = useCallback(() => {
-    setIsAnimating(true)
-  }, [])
+    setIsAnimating(true);
+  }, []);
 
   const handleTransitionAnimationComplete = useCallback(() => {
-    setIsAnimating(false)
-    setShowPlanetSystem(true)
-  }, [])
+    setIsAnimating(false);
+    setShowPlanetSystem(true);
+  }, []);
 
   const handleGalaxyTransitionStart = useCallback(() => {
-    setIsAnimating(true)
-    console.log('Galaxy transition animation started')
-  }, [])
+    setIsAnimating(true);
+    console.log("Galaxy transition animation started");
+  }, []);
 
   const handleGalaxyTransitionComplete = useCallback(() => {
-    setIsAnimating(false)
-    setIsReturningToGalaxy(false)
-    setTargetStar(null)
-    setShowPlanetSystem(false)
-    setSelectedStar(null)
-    setSelectedPlanet(null)
-    setShowStarMenu(false)
-    setMenuStar(null)
-    console.log('Galaxy transition animation completed')
-  }, [])
+    setIsAnimating(false);
+    setIsReturningToGalaxy(false);
+    setTargetStar(null);
+    setShowPlanetSystem(false);
+    setSelectedStar(null);
+    setSelectedPlanet(null);
+    setShowStarMenu(false);
+    setMenuStar(null);
+    console.log("Galaxy transition animation completed");
+  }, []);
 
   const handleNavigateToSystem = useCallback(() => {
     if (menuStar) {
-      setSelectedStar(menuStar)
-      setTargetStar(menuStar)
-      setShowStarMenu(false)
-      setMenuStar(null)
-      console.log('Navigating to star system:', menuStar)
+      setSelectedStar(menuStar);
+      setTargetStar(menuStar);
+      setShowStarMenu(false);
+      setMenuStar(null);
+      console.log("Navigating to star system:", menuStar);
     }
-  }, [menuStar])
+  }, [menuStar]);
 
-  const handleMoveSpaceshipTo = useCallback(() => {
+  const handleMoveSpaceshipTo = useCallback(async () => {
     if (menuStar) {
       // dispatch(navigateToStar({
       //   mode: 'normal',
       //   star: menuStar,
       // }))
-      dispatch(navigateToStarWarp({ star: menuStar }))
-      // dispatch(moveToStar({ 
-      //   starId: menuStar.id, 
-      //   position: menuStar.position 
-      // }))
-      dispatch(calculateStarConnections({
-        stars: renderedStars,
-        spaceship: {
-          currentStarId: menuStar.id,
-          position: menuStar.position
-        },
-      }));
-      dispatch(setCameraPosition({ x: menuStar.position.x, y: menuStar.position.y, z: menuStar.position.z }))
-      setShowStarMenu(false)
-      setMenuStar(null)
-      console.log('Moving spaceship to:', menuStar)
+      try {
+        await dispatch(navigateToStarWarp(menuStar)).unwrap();
+        dispatch(
+          calculateStarConnections({
+            stars: renderedStars,
+            spaceship: {
+              currentStarId: menuStar.id,
+              position: menuStar.position,
+            },
+          })
+        );
+        dispatch(
+          setCameraPosition({
+            x: menuStar.position.x,
+            y: menuStar.position.y,
+            z: menuStar.position.z,
+          })
+        );
+      } catch (err) {
+        console.error("Error navigating to star:", err);
+      }
+      setShowStarMenu(false);
+      setMenuStar(null);
+      console.log("Moving spaceship to:", menuStar);
     }
-  }, [menuStar, dispatch])
+  }, [menuStar, dispatch]);
 
   // const handleGoToSpaceshipLocation = useCallback(() => {
   //   if (shipCurrentStarId) {
@@ -165,32 +197,32 @@ export const StarsScene: React.FC = () => {
 
   const handleViewStarInfo = useCallback(() => {
     if (menuStar) {
-      setSelectedStar(menuStar)
-      setShowStarMenu(false)
-      setMenuStar(null)
-      console.log('Viewing star info:', menuStar)
+      setSelectedStar(menuStar);
+      setShowStarMenu(false);
+      setMenuStar(null);
+      console.log("Viewing star info:", menuStar);
     }
-  }, [menuStar])
+  }, [menuStar]);
 
   const handleExtractResources = useCallback(() => {
     if (menuStar) {
-      setResourceDialogStar(menuStar)
-      setShowResourceDialog(true)
-      setShowStarMenu(false)
-      setMenuStar(null)
-      console.log('Opening resource extraction dialog for:', menuStar)
+      setResourceDialogStar(menuStar);
+      setShowResourceDialog(true);
+      setShowStarMenu(false);
+      setMenuStar(null);
+      console.log("Opening resource extraction dialog for:", menuStar);
     }
-  }, [menuStar])
+  }, [menuStar]);
 
   const handleCloseMenu = useCallback(() => {
-    setShowStarMenu(false)
-    setMenuStar(null)
-  }, [])
+    setShowStarMenu(false);
+    setMenuStar(null);
+  }, []);
 
   const handleBackToGalaxy = useCallback(() => {
-    setIsReturningToGalaxy(true)
-    console.log('Starting return to galaxy animation')
-  }, [])
+    setIsReturningToGalaxy(true);
+    console.log("Starting return to galaxy animation");
+  }, []);
 
   // Smart positioning for menu (similar to tooltip) - moved to StarMenu component
 
@@ -306,8 +338,8 @@ export const StarsScene: React.FC = () => {
       <StellarResourceExtractionDialog
         isOpen={showResourceDialog}
         onClose={() => {
-          setShowResourceDialog(false)
-          setResourceDialogStar(null)
+          setShowResourceDialog(false);
+          setResourceDialogStar(null);
         }}
         star={resourceDialogStar}
       />
@@ -414,4 +446,4 @@ export const StarsScene: React.FC = () => {
       )} */}
     </div>
   );
-}
+};
