@@ -9,6 +9,18 @@ import {
   AlertCircle,
   CheckCircle,
   Settings,
+  Star,
+  Gauge,
+  TrendingUp,
+  Shield,
+  Sparkles,
+  Timer,
+  Target,
+  Activity,
+  Gem,
+  Cpu,
+  Battery,
+  Thermometer,
 } from "lucide-react";
 import { StarData } from "../data/starData";
 import { useAppDispatch, useAppSelector } from "../lib/hooks";
@@ -59,7 +71,7 @@ const StellarResourceExtractionDialog: React.FC<
         })
       ).unwrap();
 
-      setExtractionMessage("자원 채취를 시작했습니다!");
+      setExtractionMessage("Resource extraction started!");
       setTimeout(() => setExtractionMessage(""), 3000);
     } catch (error: any) {
       setExtractionError(error.message);
@@ -70,38 +82,79 @@ const StellarResourceExtractionDialog: React.FC<
   const handleCancelExtraction = () => {
     if (!star) return;
     dispatch(cancelStellarExtraction(star.id));
-    setExtractionMessage("자원 채취가 취소되었습니다.");
+    setExtractionMessage("Resource extraction cancelled.");
     setTimeout(() => setExtractionMessage(""), 3000);
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
-        return "text-green-400";
+        return "text-emerald-400";
       case "medium":
-        return "text-yellow-400";
+        return "text-cyan-400";
       case "hard":
         return "text-orange-400";
       case "extreme":
         return "text-red-400";
       default:
-        return "text-gray-400";
+        return "text-zinc-400";
+    }
+  };
+
+  const getDifficultyBadgeColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
+        return "bg-emerald-500/20 border-emerald-500/30 text-emerald-300";
+      case "medium":
+        return "bg-cyan-500/20 border-cyan-500/30 text-cyan-300";
+      case "hard":
+        return "bg-orange-500/20 border-orange-500/30 text-orange-300";
+      case "extreme":
+        return "bg-red-500/20 border-red-500/30 text-red-300";
+      default:
+        return "bg-zinc-500/20 border-zinc-500/30 text-zinc-300";
     }
   };
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
-        return "쉬움";
+        return "Easy";
       case "medium":
-        return "보통";
+        return "Medium";
       case "hard":
-        return "어려움";
+        return "Hard";
       case "extreme":
-        return "극한";
+        return "Extreme";
       default:
-        return "알 수 없음";
+        return "Unknown";
     }
+  };
+
+  const getResourceIcon = (resourceName: string, isRare: boolean) => {
+    if (isRare) {
+      return <Gem className="w-4 h-4 text-purple-400" />;
+    }
+
+    const name = resourceName.toLowerCase();
+    if (name.includes("energy") || name.includes("plasma")) {
+      return <Zap className="w-4 h-4 text-yellow-400" />;
+    }
+    if (name.includes("metal") || name.includes("iron")) {
+      return <Shield className="w-4 h-4 text-gray-400" />;
+    }
+    if (name.includes("crystal") || name.includes("quantum")) {
+      return <Sparkles className="w-4 h-4 text-blue-400" />;
+    }
+    return <Cpu className="w-4 h-4 text-cyan-400" />;
+  };
+
+  const getStarTypeInfo = (star: StarData) => {
+    const type = star.spectralClass || "Unknown";
+    const temp = star.temperature || 0;
+    const mass = star.mass || 1;
+
+    return { type, temp, mass };
   };
 
   // 자원 데이터 계산 (조건부 return 이전에 해야 함)
@@ -126,6 +179,21 @@ const StellarResourceExtractionDialog: React.FC<
     return null;
   }
 
+  const starInfo = getStarTypeInfo(star);
+  const totalResources =
+    Object.keys(resources.primaryResources).length +
+    Object.keys(resources.rareResources || {}).length;
+  const extractionEfficiency = Math.round(
+    100 -
+      (resources.extractionDifficulty === "easy"
+        ? 10
+        : resources.extractionDifficulty === "medium"
+        ? 25
+        : resources.extractionDifficulty === "hard"
+        ? 40
+        : 60)
+  );
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -140,147 +208,364 @@ const StellarResourceExtractionDialog: React.FC<
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
             onClick={onClose}
           />
 
           {/* Dialog */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-xl shadow-2xl p-4 max-w-6xl w-full mx-4 max-h-[98vh] overflow-y-auto"
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-3">
-                <Zap className="w-6 h-6 text-amber-400" />
-                <h2 className="text-xl font-mono text-white tracking-wide">
-                  항성 자원 채취 - {star.name}
-                </h2>
+                <div className="relative p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/30">
+                  <Zap className="w-5 h-5 text-cyan-400" />
+                  <motion.div
+                    className="absolute -top-1 -right-1 w-2 h-2 bg-cyan-400 rounded-full"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">
+                    Stellar Resource Extraction
+                  </h2>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-3 h-3 text-yellow-400" />
+                      <span className="text-zinc-300 font-medium text-sm">
+                        {star.name}
+                      </span>
+                    </div>
+                    <div
+                      className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getDifficultyBadgeColor(
+                        resources.extractionDifficulty
+                      )}`}
+                    >
+                      {starInfo.type}
+                    </div>
+                    <div className="px-2 py-0.5 bg-zinc-700/50 rounded-full text-xs text-zinc-300 border border-zinc-600/50">
+                      {totalResources} Resources
+                    </div>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-zinc-800/50 rounded-lg transition-colors group"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-4 h-4 text-zinc-400 group-hover:text-white" />
               </button>
+            </div>
+
+            {/* Star Stats Bar */}
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
+                <div className="flex items-center space-x-1.5 mb-1">
+                  <Thermometer className="w-3 h-3 text-orange-400" />
+                  <span className="text-zinc-400 text-xs">Temperature</span>
+                </div>
+                <div className="text-white font-bold text-sm">
+                  {starInfo.temp.toLocaleString()}K
+                </div>
+              </div>
+              <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
+                <div className="flex items-center space-x-1.5 mb-1">
+                  <Gauge className="w-3 h-3 text-blue-400" />
+                  <span className="text-zinc-400 text-xs">Solar Mass</span>
+                </div>
+                <div className="text-white font-bold text-sm">
+                  {starInfo.mass.toFixed(2)}M☉
+                </div>
+              </div>
+              <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
+                <div className="flex items-center space-x-1.5 mb-1">
+                  <TrendingUp className="w-3 h-3 text-emerald-400" />
+                  <span className="text-zinc-400 text-xs">Efficiency</span>
+                </div>
+                <div className="text-white font-bold text-sm">
+                  {extractionEfficiency}%
+                </div>
+              </div>
             </div>
 
             {/* Messages */}
             {extractionMessage && (
-              <div className="mb-4 p-3 bg-green-900/50 border border-green-700/50 rounded-lg flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                <span className="text-green-200 text-sm">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-2 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-center space-x-2"
+              >
+                <div className="p-0.5 bg-emerald-500/20 rounded-full">
+                  <CheckCircle className="w-3 h-3 text-emerald-400" />
+                </div>
+                <span className="text-emerald-200 font-medium text-sm">
                   {extractionMessage}
                 </span>
-              </div>
+              </motion.div>
             )}
 
             {extractionError && (
-              <div className="mb-4 p-3 bg-red-900/50 border border-red-700/50 rounded-lg flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                <span className="text-red-200 text-sm">{extractionError}</span>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center space-x-2"
+              >
+                <div className="p-0.5 bg-red-500/20 rounded-full">
+                  <AlertCircle className="w-3 h-3 text-red-400" />
+                </div>
+                <span className="text-red-200 font-medium text-sm">
+                  {extractionError}
+                </span>
+              </motion.div>
             )}
 
             {/* Active Extraction Status */}
             {activeExtraction && (
-              <div className="mb-6 p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-3 p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-blue-400" />
-                    <span className="text-blue-200 font-medium">
-                      채취 진행 중
-                    </span>
+                    <div className="relative p-1.5 bg-cyan-500/20 rounded-lg">
+                      <Activity className="w-4 h-4 text-cyan-400" />
+                      <motion.div
+                        className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-cyan-400 rounded-full"
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                    </div>
+                    <div>
+                      <span className="text-cyan-200 font-semibold text-sm">
+                        Extraction in Progress
+                      </span>
+                      <div className="text-zinc-400 text-xs flex items-center">
+                        {getResourceIcon(
+                          activeExtraction.resourceType,
+                          selectedResourceType === "rare"
+                        )}
+                        <span className="ml-1">
+                          {activeExtraction.resourceType}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <button
                     onClick={handleCancelExtraction}
-                    className="text-red-400 hover:text-red-300 text-sm"
+                    className="px-3 py-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors font-medium border border-red-500/30 text-sm"
                   >
-                    취소
+                    Cancel
                   </button>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">
-                      자원: {activeExtraction.resourceType}
-                    </span>
-                    <span className="text-gray-300">
-                      예상 수량: {activeExtraction.expectedYield}
-                    </span>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-4 gap-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1">
+                        <Target className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400">Yield</span>
+                      </div>
+                      <span className="text-white font-bold">
+                        {activeExtraction.expectedYield}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1">
+                        <Timer className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400">Time</span>
+                      </div>
+                      <span className="text-white font-bold">
+                        {Math.round((100 - activeExtraction.progress) * 0.6)}s
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1">
+                        <Battery className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400">Power</span>
+                      </div>
+                      <span className="text-yellow-400 font-bold">85%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1">
+                        <Gauge className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400">Status</span>
+                      </div>
+                      <span className="text-emerald-400 font-bold">OK</span>
+                    </div>
                   </div>
 
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-1000"
-                      style={{ width: `${activeExtraction.progress}%` }}
-                    />
-                  </div>
-
-                  <div className="text-center text-sm text-gray-400">
-                    {activeExtraction.progress.toFixed(1)}% 완료
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-zinc-300 font-medium text-sm">
+                        Progress
+                      </span>
+                      <span className="text-cyan-400 font-bold text-sm">
+                        {activeExtraction.progress.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-700/50 rounded-full h-3 overflow-hidden">
+                      <motion.div
+                        className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full relative"
+                        style={{ width: `${activeExtraction.progress}%` }}
+                        animate={{
+                          boxShadow: [
+                            "0 0 10px rgba(34, 211, 238, 0.3)",
+                            "0 0 20px rgba(34, 211, 238, 0.6)",
+                            "0 0 10px rgba(34, 211, 238, 0.3)",
+                          ],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <motion.div
+                          className="absolute inset-0 bg-white/20 rounded-full"
+                          animate={{
+                            opacity: [0.2, 0.5, 0.2],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        />
+                      </motion.div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Extraction Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700/30">
-                <h3 className="text-gray-200 font-medium mb-2 flex items-center space-x-2">
-                  <Settings className="w-4 h-4" />
-                  <span>채취 정보</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
+              <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
+                <h3 className="text-white font-semibold mb-2 flex items-center space-x-2 text-sm">
+                  <Settings className="w-4 h-4 text-zinc-400" />
+                  <span>Extraction Parameters</span>
                 </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">난이도:</span>
-                    <span
-                      className={getDifficultyColor(
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <Shield className="w-3 h-3 text-zinc-400" />
+                      <span className="text-zinc-400 text-xs">Difficulty</span>
+                    </div>
+                    <div
+                      className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getDifficultyBadgeColor(
                         resources.extractionDifficulty
-                      )}
+                      )}`}
                     >
                       {getDifficultyLabel(resources.extractionDifficulty)}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <TrendingUp className="w-3 h-3 text-zinc-400" />
+                      <span className="text-zinc-400 text-xs">Renewal</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-white font-bold text-xs">
+                        {resources.renewalRate}%
+                      </span>
+                      <div className="w-8 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full"
+                          style={{ width: `${resources.renewalRate}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <Clock className="w-3 h-3 text-zinc-400" />
+                      <span className="text-zinc-400 text-xs">Max/Hour</span>
+                    </div>
+                    <span className="text-white font-bold text-xs">
+                      {resources.maxExtractionsPerHour || "∞"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">재생성 비율:</span>
-                    <span className="text-gray-200">
-                      {resources.renewalRate}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">시간당 최대:</span>
-                    <span className="text-gray-200">
-                      {resources.maxExtractionsPerHour || "∞"}회
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <Cpu className="w-3 h-3 text-zinc-400" />
+                      <span className="text-zinc-400 text-xs">Load</span>
+                    </div>
+                    <span className="text-cyan-400 font-bold text-xs">
+                      Moderate
                     </span>
                   </div>
                 </div>
               </div>
 
               {extractionHistory && (
-                <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700/30">
-                  <h3 className="text-gray-200 font-medium mb-2">채취 기록</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">총 채취 횟수:</span>
-                      <span className="text-gray-200">
-                        {extractionHistory.totalExtractions}회
-                      </span>
+                <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
+                  <h3 className="text-white font-semibold mb-2 flex items-center space-x-2 text-sm">
+                    <Activity className="w-4 h-4 text-zinc-400" />
+                    <span>Statistics</span>
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <Target className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400 text-xs">Total</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-white font-bold text-xs">
+                          {extractionHistory.totalExtractions}
+                        </span>
+                        <div className="px-1.5 py-0.5 bg-emerald-500/20 rounded-full text-xs text-emerald-300">
+                          +
+                          {Math.floor(extractionHistory.totalExtractions * 0.1)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">이번 시간:</span>
-                      <span className="text-gray-200">
-                        {extractionHistory.extractionsThisHour}회
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <Timer className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400 text-xs">This Hour</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-white font-bold text-xs">
+                          {extractionHistory.extractionsThisHour}
+                        </span>
+                        <div className="w-12 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                            style={{
+                              width: `${
+                                (extractionHistory.extractionsThisHour /
+                                  (resources.maxExtractionsPerHour || 10)) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">마지막 채취:</span>
-                      <span className="text-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <Clock className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400 text-xs">Last</span>
+                      </div>
+                      <span className="text-white font-medium text-xs">
                         {new Date(
                           extractionHistory.lastExtraction
                         ).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <TrendingUp className="w-3 h-3 text-zinc-400" />
+                        <span className="text-zinc-400 text-xs">Success</span>
+                      </div>
+                      <span className="text-emerald-400 font-bold text-xs">
+                        98.5%
                       </span>
                     </div>
                   </div>
@@ -291,19 +576,24 @@ const StellarResourceExtractionDialog: React.FC<
             {/* Special Conditions */}
             {resources.specialConditions &&
               resources.specialConditions.length > 0 && (
-                <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
-                  <h3 className="text-yellow-200 font-medium mb-2 flex items-center space-x-2">
+                <div className="mb-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                  <h3 className="text-orange-200 font-semibold mb-2 flex items-center space-x-2 text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    <span>특수 조건</span>
+                    <span>Special Conditions</span>
+                    <div className="px-1.5 py-0.5 bg-orange-500/20 rounded-full text-xs text-orange-300">
+                      {resources.specialConditions.length}
+                    </div>
                   </h3>
-                  <ul className="space-y-1 text-sm">
+                  <ul className="space-y-1.5">
                     {resources.specialConditions.map((condition, index) => (
                       <li
                         key={index}
-                        className="text-yellow-100 flex items-start space-x-2"
+                        className="text-orange-100 flex items-start space-x-2 p-2 bg-orange-500/5 rounded-lg border border-orange-500/20 text-xs"
                       >
-                        <span className="text-yellow-400 mt-1">•</span>
-                        <span>{condition}</span>
+                        <div className="p-0.5 bg-orange-500/20 rounded-full mt-0.5">
+                          <AlertCircle className="w-2.5 h-2.5 text-orange-400" />
+                        </div>
+                        <span className="leading-relaxed">{condition}</span>
                       </li>
                     ))}
                   </ul>
@@ -312,67 +602,151 @@ const StellarResourceExtractionDialog: React.FC<
 
             {/* Resource Selection */}
             {!activeExtraction && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Resource Type Toggle */}
-                <div className="flex space-x-1 bg-gray-800/50 p-1 rounded-lg">
+                <div className="flex space-x-1.5 bg-zinc-800/50 p-1.5 rounded-lg">
                   <button
                     onClick={() => setSelectedResourceType("primary")}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm ${
                       selectedResourceType === "primary"
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                        ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+                        : "text-zinc-300 hover:text-white hover:bg-zinc-700/50"
                     }`}
                   >
-                    주요 자원
+                    <Cpu className="w-3 h-3" />
+                    <span>Primary</span>
+                    <div className="px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
+                      {Object.keys(resources.primaryResources).length}
+                    </div>
                   </button>
                   {resources.rareResources &&
                     Object.keys(resources.rareResources).length > 0 && (
                       <button
                         onClick={() => setSelectedResourceType("rare")}
-                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                        className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm ${
                           selectedResourceType === "rare"
-                            ? "bg-purple-600 text-white"
-                            : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                            ? "bg-purple-500 text-white shadow-lg shadow-purple-500/25"
+                            : "text-zinc-300 hover:text-white hover:bg-zinc-700/50"
                         }`}
                       >
-                        희귀 자원
+                        <Gem className="w-3 h-3" />
+                        <span>Rare</span>
+                        <div className="px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
+                          {Object.keys(resources.rareResources).length}
+                        </div>
                       </button>
                     )}
                 </div>
 
                 {/* Resource List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {Object.entries(currentResources).map(
                     ([resourceName, amount]) => (
-                      <button
+                      <motion.button
                         key={resourceName}
                         onClick={() => setSelectedResource(resourceName)}
-                        className={`p-3 rounded-lg border transition-all duration-200 text-left ${
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`p-2 rounded-lg border transition-all duration-200 text-left relative overflow-hidden ${
                           selectedResource === resourceName
-                            ? "border-amber-500/50 bg-amber-900/20"
-                            : "border-gray-700/50 bg-gray-800/20 hover:border-gray-600/50"
+                            ? "border-cyan-500/50 bg-cyan-500/10 shadow-lg shadow-cyan-500/10"
+                            : "border-zinc-700/50 bg-zinc-800/20 hover:border-zinc-600/50 hover:bg-zinc-800/40"
                         }`}
                       >
-                        <div className="font-medium text-white">
-                          {resourceName}
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="flex items-center space-x-1.5">
+                            <div className="p-1 bg-zinc-700/50 rounded-lg">
+                              {getResourceIcon(
+                                resourceName,
+                                selectedResourceType === "rare"
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-white text-xs">
+                                {resourceName}
+                              </div>
+                              <div className="text-zinc-400 text-xs">
+                                {selectedResourceType === "rare"
+                                  ? "Rare"
+                                  : "Primary"}
+                              </div>
+                            </div>
+                          </div>
+                          {selectedResource === resourceName && (
+                            <div className="p-0.5 bg-cyan-500/20 rounded-full">
+                              <CheckCircle className="w-3 h-3 text-cyan-400" />
+                            </div>
+                          )}
                         </div>
-                        <div className="text-sm text-gray-400">
-                          기본 수량: {amount}개
+
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-xs">Yield</span>
+                            <span className="text-white font-bold text-xs">
+                              {amount} units
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-xs">Time</span>
+                            <span className="text-cyan-400 font-medium text-xs">
+                              ~60s
+                            </span>
+                          </div>
+                          <div className="w-full bg-zinc-700/30 rounded-full h-1">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                              style={{
+                                width: `${Math.min(
+                                  (amount / 100) * 100,
+                                  100
+                                )}%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                      </button>
+
+                        {selectedResource === resourceName && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 border-2 border-cyan-500/30 rounded-lg pointer-events-none"
+                          />
+                        )}
+                      </motion.button>
                     )
                   )}
                 </div>
 
                 {/* Start Extraction Button */}
-                <button
+                <motion.button
                   onClick={handleStartExtraction}
                   disabled={!selectedResource}
-                  className="w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  whileHover={{ scale: selectedResource ? 1.02 : 1 }}
+                  whileTap={{ scale: selectedResource ? 0.98 : 1 }}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg disabled:shadow-none relative overflow-hidden"
                 >
                   <Zap className="w-4 h-4" />
-                  <span>자원 채취 시작</span>
-                </button>
+                  <span>Start Extraction</span>
+                  {selectedResource && (
+                    <div className="px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                      {selectedResource}
+                    </div>
+                  )}
+
+                  {selectedResource && (
+                    <motion.div
+                      className="absolute inset-0 bg-white/10"
+                      animate={{
+                        x: ["-100%", "100%"],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    />
+                  )}
+                </motion.button>
               </div>
             )}
           </motion.div>

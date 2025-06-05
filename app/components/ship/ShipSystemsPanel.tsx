@@ -9,22 +9,22 @@ import ModuleGrid from "./ModuleGrid";
 import ModuleDetails from "./ModuleDetails";
 import UpgradeOverview from "./UpgradeOverview";
 import ResourceGuide from "./ResourceGuide";
-import ModuleCreator from "./ModuleCreator";
+import ModuleCreator from "../module-create/ModuleCreator";
 import ResearchCenter from "./ResearchCenter";
 
-type TabType = 'modules' | 'upgrades' | 'creator' | 'research' | 'resources';
+type TabType = "modules" | "upgrades" | "creator" | "research" | "resources";
 
 export default function ShipSystemsPanel() {
   const shipSystems = useAppSelector((state) => state.shipSystems);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('modules');
+  const [activeTab, setActiveTab] = useState<TabType>("modules");
 
   const tabs = [
-    { id: 'modules' as TabType, label: '모듈 관리', icon: '⚙️' },
-    { id: 'upgrades' as TabType, label: '업그레이드', icon: '⬆️' },
-    { id: 'creator' as TabType, label: '모듈 생성', icon: '🔧' },
-    { id: 'research' as TabType, label: '연구 센터', icon: '🔬' },
-    { id: 'resources' as TabType, label: '자원 가이드', icon: '📋' }
+    { id: "modules" as TabType, label: "모듈 관리", icon: "⚙️" },
+    { id: "upgrades" as TabType, label: "업그레이드", icon: "⬆️" },
+    { id: "creator" as TabType, label: "모듈 생성", icon: "🔧" },
+    { id: "research" as TabType, label: "연구 센터", icon: "🔬" },
+    { id: "resources" as TabType, label: "자원 가이드", icon: "📋" },
   ];
 
   return (
@@ -34,12 +34,13 @@ export default function ShipSystemsPanel() {
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: "linear-gradient(rgba(156, 163, 175, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.1) 1px, transparent 1px)",
+            backgroundImage:
+              "linear-gradient(rgba(156, 163, 175, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.1) 1px, transparent 1px)",
             backgroundSize: "20px 20px",
           }}
         />
       </div>
-      
+
       {/* System Overview Section */}
       <div className="relative p-4 border-b border-gray-700/50">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-800/20 to-transparent" />
@@ -61,8 +62,8 @@ export default function ShipSystemsPanel() {
               onClick={() => setActiveTab(tab.id)}
               className={`relative px-6 py-3 text-sm font-mono uppercase tracking-wider transition-all duration-300 ${
                 activeTab === tab.id
-                  ? 'text-cyan-300 border-b-2 border-cyan-500/80 bg-cyan-900/20'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/30'
+                  ? "text-cyan-300 border-b-2 border-cyan-500/80 bg-cyan-900/20"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/30"
               }`}
             >
               <div className="flex items-center space-x-2">
@@ -76,15 +77,15 @@ export default function ShipSystemsPanel() {
           ))}
         </div>
       </div>
-      
+
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden relative z-10">
-        {activeTab === 'modules' && (
+        {activeTab === "modules" && (
           <>
             {/* Left Panel - System Status */}
             <div className="w-1/3 p-4 overflow-y-auto border-r border-gray-700/50 space-y-4 relative">
               <div className="absolute inset-y-0 right-0 w-0.5 bg-gradient-to-b from-transparent via-gray-600 to-transparent" />
-              
+
               <EnergyManagement energy={shipSystems.energy} />
               <ResourceStatus resources={shipSystems.resources} />
               <ModuleGrid
@@ -93,7 +94,7 @@ export default function ShipSystemsPanel() {
                 onSelect={setSelectedModuleId}
               />
             </div>
-            
+
             {/* Right Panel - Module Details */}
             <div className="w-2/3 p-4 overflow-y-auto relative">
               {selectedModuleId ? (
@@ -131,25 +132,25 @@ export default function ShipSystemsPanel() {
           </>
         )}
 
-        {activeTab === 'upgrades' && (
+        {activeTab === "upgrades" && (
           <div className="w-full p-4 overflow-y-auto">
             <UpgradeOverview />
           </div>
         )}
 
-        {activeTab === 'creator' && (
+        {activeTab === "creator" && (
           <div className="w-full overflow-y-auto">
             <ModuleCreator />
           </div>
         )}
 
-        {activeTab === 'research' && (
+        {activeTab === "research" && (
           <div className="w-full overflow-y-auto">
             <ResearchCenter />
           </div>
         )}
 
-        {activeTab === 'resources' && (
+        {activeTab === "resources" && (
           <div className="w-full p-4 overflow-y-auto">
             <ResourceGuide />
           </div>
