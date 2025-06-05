@@ -163,7 +163,7 @@ export function ModuleDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-300px)]">
           <div className="space-y-6">
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
