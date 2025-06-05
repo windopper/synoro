@@ -17,6 +17,7 @@ export default function ShipStatusOverview() {
     if (percentage >= 25) return "bg-orange-500";
     return "bg-red-500";
   };
+
   // Memoize computed values for performance
   const computedValues = useMemo(() => {
     const energyPercentage = spaceship.energy?.totalStorage
