@@ -3,20 +3,16 @@ import React from "react";
 import { useState } from "react";
 import { useAppSelector } from "../../lib/hooks";
 import SystemOverview from "./SystemOverview";
-import EnergyManagement from "./EnergyManagement";
-import ResourceStatus from "./ResourceStatus";
-import ModuleGrid from "./ModuleGrid";
-import ModuleDetails from "./ModuleDetails";
-import UpgradeOverview from "./UpgradeOverview";
-import ResourceGuide from "./ResourceGuide";
+import UpgradeOverview from "../upgrade-overview/UpgradeOverview";
+import ResourceGuide from "../resource-guide/ResourceGuide";
 import ModuleCreator from "../module-create/ModuleCreator";
-import ResearchCenter from "./ResearchCenter";
+import ResearchCenter from "../research-center/ResearchCenter";
+import ModuleSystemLayout from "../module-system/ModuleSystemLayout";
 
 type TabType = "modules" | "upgrades" | "creator" | "research" | "resources";
 
 export default function ShipSystemsPanel() {
   const shipSystems = useAppSelector((state) => state.shipSystems);
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("modules");
 
   const tabs = [
@@ -28,22 +24,22 @@ export default function ShipSystemsPanel() {
   ];
 
   return (
-    <div className="flex flex-col h-full text-gray-200 relative">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
+    <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 relative overflow-hidden">
+      {/* 네온 그리드 패턴 */}
+      <div className="absolute inset-0 pointer-events-none opacity-30">
         <div
           className="w-full h-full"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(156, 163, 175, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.1) 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
+              "linear-gradient(rgba(34, 197, 94, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 197, 94, 0.1) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
           }}
         />
       </div>
 
-      {/* System Overview Section */}
-      <div className="relative p-4 border-b border-gray-700/50">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-800/20 to-transparent" />
+      {/* 상단 시스템 개요 - 콤팩트한 디자인 */}
+      <div className="relative p-3 border-b border-zinc-800/70 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/40 via-zinc-800/20 to-transparent" />
         <div className="relative">
           <SystemOverview
             hull={shipSystems.overallHullIntegrity}
@@ -52,106 +48,70 @@ export default function ShipSystemsPanel() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="relative border-b border-gray-700/50">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-800/10 to-transparent" />
+      {/* 네온 탭 네비게이션 */}
+      <div className="relative border-b border-zinc-800/70 bg-zinc-900/50 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/30 to-transparent" />
         <div className="relative flex">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative px-6 py-3 text-sm font-mono uppercase tracking-wider transition-all duration-300 ${
+              className={`relative px-4 py-2.5 text-xs font-mono uppercase tracking-wider transition-all duration-300 group ${
                 activeTab === tab.id
-                  ? "text-cyan-300 border-b-2 border-cyan-500/80 bg-cyan-900/20"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/30"
+                  ? "text-emerald-300 border-b-2 border-emerald-400 bg-emerald-950/30 shadow-emerald-500/20 shadow-md"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
+              <div className="flex items-center space-x-1.5">
+                <span className={`transition-all duration-300 ${
+                  activeTab === tab.id ? "text-emerald-300 drop-shadow-lg" : ""
+                }`}>{tab.icon}</span>
+                <span className="whitespace-nowrap">{tab.label}</span>
               </div>
               {activeTab === tab.id && (
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/10 via-cyan-500/20 to-cyan-600/10 pointer-events-none" />
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-emerald-400/20 to-emerald-600/10 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
+                </>
               )}
+              <div className={`absolute inset-0 rounded-sm transition-all duration-300 ${
+                activeTab === tab.id 
+                  ? "bg-emerald-500/5 border border-emerald-500/20" 
+                  : "group-hover:bg-zinc-700/20"
+              }`} />
             </button>
           ))}
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* 메인 콘텐츠 영역 */}
       <div className="flex flex-1 overflow-hidden relative z-10">
         {activeTab === "modules" && (
-          <>
-            {/* Left Panel - System Status */}
-            <div className="w-1/3 p-4 overflow-y-auto border-r border-gray-700/50 space-y-4 relative">
-              <div className="absolute inset-y-0 right-0 w-0.5 bg-gradient-to-b from-transparent via-gray-600 to-transparent" />
-
-              <EnergyManagement energy={shipSystems.energy} />
-              <ResourceStatus resources={shipSystems.resources} />
-              <ModuleGrid
-                modules={shipSystems.installedModules}
-                selectedModuleId={selectedModuleId}
-                onSelect={setSelectedModuleId}
-              />
-            </div>
-
-            {/* Right Panel - Module Details */}
-            <div className="w-2/3 p-4 overflow-y-auto relative">
-              {selectedModuleId ? (
-                <ModuleDetails moduleId={selectedModuleId} />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="w-12 h-12 border border-gray-600 mx-auto mb-4 flex items-center justify-center rounded">
-                      <div className="w-3 h-3 bg-gray-500 animate-pulse rounded-full" />
-                    </div>
-                    <div className="text-gray-400 font-mono text-sm uppercase tracking-wider mb-2">
-                      Module Selection Required
-                    </div>
-                    <div className="text-gray-500 font-mono text-xs">
-                      Select a module from the left panel to view details
-                    </div>
-                    <div className="flex justify-center mt-4">
-                      <div className="flex space-x-1">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="w-1 h-1 bg-gray-500 rounded-full"
-                            style={{
-                              animationDelay: `${i * 0.3}s`,
-                              animation: "pulse 2s infinite",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
+          <div className="w-full">
+            <ModuleSystemLayout />
+          </div>
         )}
 
         {activeTab === "upgrades" && (
-          <div className="w-full p-4 overflow-y-auto">
+          <div className="w-full p-3 overflow-y-auto bg-zinc-950/60 backdrop-blur-sm">
             <UpgradeOverview />
           </div>
         )}
 
         {activeTab === "creator" && (
-          <div className="w-full overflow-y-auto">
+          <div className="w-full overflow-y-auto bg-zinc-950/60 backdrop-blur-sm">
             <ModuleCreator />
           </div>
         )}
 
         {activeTab === "research" && (
-          <div className="w-full overflow-y-auto">
+          <div className="w-full overflow-y-auto bg-zinc-950/60 backdrop-blur-sm">
             <ResearchCenter />
           </div>
         )}
 
         {activeTab === "resources" && (
-          <div className="w-full p-4 overflow-y-auto">
+          <div className="w-full p-3 overflow-y-auto bg-zinc-950/60 backdrop-blur-sm">
             <ResourceGuide />
           </div>
         )}
