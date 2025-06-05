@@ -286,7 +286,7 @@ export const NAVIGATION_MODULES: CompleteModuleInfo[] = [
     tier: 0,
     category: ModuleCategory.NAVIGATION,
     description: "실험적인 워프 기술을 적용한 초기형 워프 드라이브입니다.",
-    energyConsumption: { base: 50, max: 200 },
+    energyConsumption: { base: 20, max: 20 },
     requiredResearch: "TECH_WARP_01",
     requiredResources: {
       "초전도 코일": 10,
@@ -297,8 +297,6 @@ export const NAVIGATION_MODULES: CompleteModuleInfo[] = [
     durability: 60,
     performance: {
       warpRange: 200,
-      warpPrepTime: 60,
-      warpAccuracy: 70,
     } as NavigationModulePerformance,
   },
 

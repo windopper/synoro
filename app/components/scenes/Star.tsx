@@ -3,7 +3,7 @@
 import React, { useRef, useState, useMemo, useCallback, memo, useEffect } from 'react'
 import { Mesh } from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
-import { StarData } from '../data/starData'
+import { StarData } from '../../data/starData'
 
 interface StarProps {
   star: StarData;

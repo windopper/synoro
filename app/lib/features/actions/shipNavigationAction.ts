@@ -26,6 +26,10 @@ export const navigateToStar = createAsyncThunk(
       );
     });
 
+    if (state.shipSystems.navigation) {
+      throw new Error("이미 항법 중입니다");
+    }
+
     if (!navigationModule) {
       throw new Error("항해 모듈이 설치되어 있지 않습니다");
     }
@@ -51,10 +55,14 @@ export const navigateToStarWarp = createAsyncThunk(
         const moduleInfo = getModuleById(module.id);
         return (
           moduleInfo?.category === ModuleCategory.NAVIGATION &&
-          moduleInfo.id.includes("WARP")
+          moduleInfo.id.startsWith(NAVIGATION_MODULE_WARP_PREFIX)
         );
       }
     );
+
+    if (state.shipSystems.navigation) {
+      throw new Error("이미 항법 중입니다");
+    }
 
     if (!warpModule) {
       throw new Error("워프 항해 모듈이 설치되어 있지 않습니다");
@@ -65,7 +73,7 @@ export const navigateToStarWarp = createAsyncThunk(
       throw new Error("워프 항해에 필요한 에너지가 부족합니다");
     }
 
-    return { star };
+    return { star, warpModule };
   }
 );
 

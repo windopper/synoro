@@ -3,6 +3,7 @@ import { StarData } from "@/app/data/starData";
 import { useThree, useFrame } from "@react-three/fiber";
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
+import { useAppSelector } from "@/app/lib/hooks";
 
 // Camera controller with position-based zoom and WASD movement
 export function CameraController({
@@ -12,8 +13,9 @@ export function CameraController({
   showPlanetSystem: boolean;
   selectedStar: StarData | null;
 }) {
-  const { camera } = useThree();
+  const { camera, controls } = useThree();
   const keysPressed = useRef<Set<string>>(new Set());
+  const shipPosition = useAppSelector(state => state.shipSystems.position);
 
   useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
@@ -72,7 +74,8 @@ export function CameraController({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (["w", "a", "s", "d"].includes(key)) {
+      console.log("key", key);
+      if (["w", "a", "s", "d", " "].includes(key)) {
         keysPressed.current.add(key);
         event.preventDefault();
       }
@@ -80,7 +83,7 @@ export function CameraController({
 
     const handleKeyUp = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (["w", "a", "s", "d"].includes(key)) {
+      if (["w", "a", "s", "d", " "].includes(key)) {
         keysPressed.current.delete(key);
         event.preventDefault();
       }
@@ -132,6 +135,14 @@ export function CameraController({
     }
     if (keysPressed.current.has("d")) {
       movement.add(right.clone().multiplyScalar(moveDelta));
+    }
+
+    // 스페이스바 누르면 본래 위치로 이동
+    if (keysPressed.current.has(" ")) {
+      if (controls && "target" in controls && "update" in controls) {
+        (controls.target as THREE.Vector3).set(shipPosition.x, shipPosition.y, shipPosition.z);
+        (controls as any).update(1);
+      }
     }
 
     if (movement.length() > 0) {

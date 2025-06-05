@@ -51,13 +51,13 @@ export class NavigationSystemManager {
     const navigationSpeed = performance.navigation.systemSpeed;
 
     // 항법 시스템이 비활성화되어 있으면 경고
-    if (navigationSpeed <= 0) {
-      console.warn(
-        "⚠️ 항법 시스템이 비활성화되어 있습니다. 기본 속도로 항법합니다."
-      );
-      this.processSlowNavigation(state, deltaTime);
-      return;
-    }
+    // if (navigationSpeed <= 0) {
+    //   console.warn(
+    //     "⚠️ 항법 시스템이 비활성화되어 있습니다. 기본 속도로 항법합니다."
+    //   );
+    //   this.processSlowNavigation(state, deltaTime);
+    //   return;
+    // }
 
     if (state.navigation?.navigationMode === "warp") {
       this.processWarpNavigation(state, deltaTime);

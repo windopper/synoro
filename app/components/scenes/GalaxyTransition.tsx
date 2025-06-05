@@ -3,10 +3,10 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3, Group } from 'three'
-import { StarData } from '../data/starData'
+import { StarData } from '../../data/starData'
 import Star from './Star'
-import { PlanetSystem } from './PlanetSystem'
-import { PlanetData } from '../data/planetData'
+import { PlanetSystem } from '../PlanetSystem'
+import { PlanetData } from '../../data/planetData'
 import { StarConnections } from './StarConnections'
 
 interface GalaxyTransitionProps {

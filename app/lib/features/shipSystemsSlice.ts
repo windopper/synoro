@@ -407,6 +407,13 @@ const initialState: ShipSystemsState = {
       energyAllocation: 100,
       isActive: false,
     },
+    WD_01_T0: {
+      id: "WD_01_T0",
+      status: ModuleStatus.NORMAL,
+      currentDurability: 60,
+      energyAllocation: 100,
+      isActive: false,
+    },
   },
 
   energy: {

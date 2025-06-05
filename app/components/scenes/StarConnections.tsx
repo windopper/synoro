@@ -4,8 +4,8 @@ import React, { useMemo, useRef } from "react";
 import { Html, Line, Text } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { useAppSelector } from "../lib/hooks";
-import { StarData } from "../data/starData";
+import { useAppSelector } from "../../lib/hooks";
+import { StarData } from "../../data/starData";
 
 interface StarConnectionsProps {
   stars: StarData[];

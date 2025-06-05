@@ -9,17 +9,16 @@ import React, {
 } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars as DreiStars } from "@react-three/drei";
-import Star from "../Star";
-import { StarTooltip } from "../StarTooltip";
-import StarMenu from "../StarMenu";
+import Star from "./Star";
+import StarMenu from "../star/StarMenu";
 import { StarInfoPanel } from "../StarInfoPanel";
 import { PlanetTooltip } from "../PlanetTooltip";
 import StellarResourceExtractionDialog from "../StellarResourceExtractionDialog";
 import { PlanetSystem } from "../PlanetSystem";
 import { CameraAnimator } from "../CameraAnimator";
-import { StarConnections } from "../StarConnections";
-import { StarSystemTransition } from "../StarSystemTransition";
-import { GalaxyTransition } from "../GalaxyTransition";
+import { StarConnections } from "./StarConnections";
+import { StarSystemTransition } from "./StarSystemTransition";
+import { GalaxyTransition } from "./GalaxyTransition";
 import { StarData } from "../../data/starData";
 import { PlanetData } from "../../data/planetData";
 import { useAppDispatch } from "../../lib/hooks";
@@ -35,7 +34,10 @@ import {
 } from "@/app/lib/features/shipSystemsSlice";
 import DetailedPanel from "../DetailedPanel";
 import ProgressIndicatorWrapper from "../indicator/ProgressIndicatorWrapper";
-import StarNavigationCompactPanel from "../StarNavigationCompactPanel";
+import StarNavigationCompactPanel from "./StarNavigationCompactPanel";
+import useNavigateShip from "@/app/hooks/useNavigateShip";
+import StarNavigationWarpIndicateSphere from "./StarNavigationWarpIndicateSphere";
+import BackToCurrentPositionFloatingButton from "../BackToCurrentPositionFloatingButton";
 
 const RENDER_DISTANCE = 100; // Distance at which stars are rendered
 
@@ -69,6 +71,12 @@ export const StarsScene: React.FC = () => {
   const [resourceDialogStar, setResourceDialogStar] = useState<StarData | null>(
     null
   );
+
+  const {
+    handleNavigateToStarNormal: navigateToStarNormal,
+    handleNavigateToStarWarp: navigateToStarWarp,
+    handleCancelNavigation,
+  } = useNavigateShip({ targetStar: menuStar });
 
   const handleStarHover = useCallback(
     (star: StarData | null, position: { x: number; y: number }) => {
@@ -155,30 +163,10 @@ export const StarsScene: React.FC = () => {
     }
   }, [menuStar]);
 
-  const handleMoveSpaceshipTo = useCallback(async () => {
+  const handleNavigateToStarWarp = useCallback(async () => {
     if (menuStar) {
-      // dispatch(navigateToStar({
-      //   mode: 'normal',
-      //   star: menuStar,
-      // }))
       try {
-        await dispatch(navigateToStarWarp(menuStar)).unwrap();
-        dispatch(
-          calculateStarConnections({
-            stars: renderedStars,
-            spaceship: {
-              currentStarId: menuStar.id,
-              position: menuStar.position,
-            },
-          })
-        );
-        dispatch(
-          setCameraPosition({
-            x: menuStar.position.x,
-            y: menuStar.position.y,
-            z: menuStar.position.z,
-          })
-        );
+        await navigateToStarWarp();
       } catch (err) {
         console.error("Error navigating to star:", err);
       }
@@ -186,14 +174,20 @@ export const StarsScene: React.FC = () => {
       setMenuStar(null);
       console.log("Moving spaceship to:", menuStar);
     }
-  }, [menuStar, dispatch]);
+  }, [menuStar]);
 
-  // const handleGoToSpaceshipLocation = useCallback(() => {
-  //   if (shipCurrentStarId) {
-  //     dispatch(setCameraPosition({ x: shipPosition.x, y: shipPosition.y, z: shipPosition.z }))
-  //     console.log('Going to spaceship location:', shipPosition)
-  //   }
-  // }, [shipCurrentStarId, dispatch])
+  const handleNavigateToStarNormal = useCallback(async () => {
+    if (menuStar) {
+      try {
+        await navigateToStarNormal();
+      } catch (err) {
+        console.error("Error navigating to star:", err);
+      }
+      setShowStarMenu(false);
+      setMenuStar(null);
+      console.log("Moving spaceship to:", menuStar);
+    }
+  }, [menuStar]);
 
   const handleViewStarInfo = useCallback(() => {
     if (menuStar) {
@@ -230,7 +224,7 @@ export const StarsScene: React.FC = () => {
     <div className="w-full h-full relative">
       <Canvas
         camera={{
-          fov: 75,
+          fov: 105,
           near: 0.1,
           far: 15000,
         }}
@@ -293,10 +287,9 @@ export const StarsScene: React.FC = () => {
           )}
         </Suspense>
 
-        <StarNavigationCompactPanel />
-
-        {/* 함선 렌더링 */}
-        {/* {!showPlanetSystem && <Spaceship />} */}
+        <StarNavigationCompactPanel handleCancelNavigation={handleCancelNavigation} />
+        <StarNavigationWarpIndicateSphere />
+        <BackToCurrentPositionFloatingButton />
 
         {/* Camera controls with zoom disabled */}
         <OrbitControls
@@ -305,7 +298,7 @@ export const StarsScene: React.FC = () => {
           dampingFactor={0.05}
           minDistance={30} // CameraAnimator와 일치하도록 수정
           maxDistance={45} // CameraAnimator와 일치하도록 수정
-          enablePan={false}
+          enablePan={true}
           enableZoom={false} // Zoom disabled
           enableRotate={true}
           maxPolarAngle={showPlanetSystem ? Math.PI * 0.75 : Math.PI} // CameraAnimator와 일치
@@ -328,7 +321,8 @@ export const StarsScene: React.FC = () => {
         star={menuStar}
         position={menuPosition}
         onClose={handleCloseMenu}
-        onMoveSpaceshipTo={handleMoveSpaceshipTo}
+        onNavigateToStarWarp={handleNavigateToStarWarp}
+        onNavigateToStarNormal={handleNavigateToStarNormal}
         onNavigateToSystem={handleNavigateToSystem}
         onViewStarInfo={handleViewStarInfo}
         onExtractResources={handleExtractResources}

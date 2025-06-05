@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useEffect } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { events, useFrame, useThree } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import { StarData } from '../data/starData'
 import { useAppSelector } from '../lib/hooks'
@@ -16,7 +16,8 @@ const easeInOutCubic = (t: number): number => {
 }
 
 export const CameraAnimator: React.FC<CameraAnimatorProps> = () => {
-  const { camera, controls, viewport } = useThree()
+  const { camera, controls } = useThree()
+
   const { position } = useAppSelector(state => state.camera)
   const previousPosition = useRef<Vector3>(new Vector3())
   const animationRef = useRef<{
