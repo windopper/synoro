@@ -62,6 +62,22 @@ export const starSystemSlice = createSlice({
         state.initialized = true;
       }
     },
+    setStarVisibility: (state, action: PayloadAction<{ starId: string; isVisible: boolean }>) => {
+      const { starId, isVisible } = action.payload;
+      const star = state.stars.find((star) => star.id === starId);
+      if (star) {
+        star.isVisible = isVisible;
+      }
+    },
+    setStarVisibilityBatch: (state, action: PayloadAction<{ starIds: string[]; isVisible: boolean }>) => {
+      const { starIds, isVisible } = action.payload;
+      starIds.forEach((starId) => {
+        const star = state.stars.find((star) => star.id === starId);
+        if (star) {
+          star.isVisible = isVisible;
+        }
+      });
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(calculateStarConnections.fulfilled, (state, action) => {
@@ -123,6 +139,10 @@ export const calculateStarConnections = createAsyncThunk(
   }
 );
 
-export const { initializeStarSystem } = starSystemSlice.actions;
+export const {
+  initializeStarSystem,
+  setStarVisibility,
+  setStarVisibilityBatch,
+} = starSystemSlice.actions;
 
 export default starSystemSlice.reducer;

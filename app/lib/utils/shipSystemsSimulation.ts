@@ -25,6 +25,7 @@ import { AppDispatch, store } from '../store';
 import { getModuleById } from '@/app/data/shipModules';
 import { getResearchById } from '@/app/data/researchTechs';
 import CommunicationSystemManager from './communicationSystem';
+import ScanSystemManager from './scanSystem';
 
 // === 시뮬레이션 매니저 클래스 ===
 export class ShipSystemsSimulation {
@@ -33,11 +34,13 @@ export class ShipSystemsSimulation {
   private lastUpdateTime: number = Date.now();
   private navigationManager: NavigationSystemManager;
   private communicationManager: CommunicationSystemManager;
+  private scanSystemManager: ScanSystemManager;
   
   constructor(dispatch: AppDispatch) {
     this.dispatch = dispatch;
     this.navigationManager = new NavigationSystemManager(dispatch);
     this.communicationManager = new CommunicationSystemManager(dispatch);
+    this.scanSystemManager = new ScanSystemManager(dispatch);
   }
   
   /**
@@ -76,7 +79,7 @@ export class ShipSystemsSimulation {
    */
   updateSystems(state: ShipSystemsState, deltaTime: number): void {
     this.updateEnergySystem(state, deltaTime);
-    this.updateScanningSystems(state, deltaTime);
+    this.scanSystemManager.updateScanningSystems(state, deltaTime);
     this.communicationManager.updateCommunicationSystems(state, deltaTime);
     this.updateRepairSystems(state, deltaTime);
     this.updateExtractionSystems(state, deltaTime);
@@ -122,26 +125,6 @@ export class ShipSystemsSimulation {
     
     this.dispatch(updateEnergyStorage(newStoredEnergy));
     this.dispatch(recalculateEnergySystems());
-  }
-  
-  /**
-   * 스캐닝 시스템 업데이트
-   */
-  private updateScanningSystems(state: ShipSystemsState, deltaTime: number): void {
-    const performance = calculateShipPerformance(state);
-    const scanSpeed = performance.exploration.analysisSpeed;
-    
-    Object.entries(state.activeScans).forEach(([scanId, scan]) => {
-      const progressIncrement = (scanSpeed / 3600) * deltaTime; // 시간당 속도를 초당으로 변환
-      const newProgress = Math.min(100, scan.progress + progressIncrement);
-      
-      this.dispatch(updateScanProgress({ scanId, progress: newProgress }));
-      
-      // 스캔 완료 시 보상 지급
-      if (newProgress >= 100) {
-        this.completeScan(scanId, scan.targetId);
-      }
-    });
   }
   
   /**

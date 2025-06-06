@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars as DreiStars } from "@react-three/drei";
+import { OrbitControls, Stars as DreiStars, Stars } from "@react-three/drei";
 import Star from "./Star";
 import StarMenu from "../star/StarMenu";
 import { StarInfoPanel } from "../StarInfoPanel";
@@ -38,12 +38,15 @@ import StarNavigationCompactPanel from "./StarNavigationCompactPanel";
 import useNavigateShip from "@/app/hooks/useNavigateShip";
 import StarNavigationWarpIndicateSphere from "./StarNavigationWarpIndicateSphere";
 import BackToCurrentPositionFloatingButton from "../BackToCurrentPositionFloatingButton";
+import InvisibleStar from "./InvisibleStar";
+import ScanCompactPanel from "./ScanCompactPanel";
+import StarScanIndicateSphere from "./StarScanIndicateSphere";
 
 const RENDER_DISTANCE = 100; // Distance at which stars are rendered
 
 export const StarsScene: React.FC = () => {
   const dispatch = useAppDispatch();
-  const renderedStars = useRenderedStars();
+  const { renderedStars, invisibleStars } = useRenderedStars();
 
   const [hoveredStar, setHoveredStar] = useState<StarData | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -237,6 +240,9 @@ export const StarsScene: React.FC = () => {
         {/* Ambient lighting */}
         <ambientLight intensity={0.1} />
 
+        {/* Fog */}
+        <fog attach="fog" color="#000000" near={30} far={100} args={[0, 0, 0]} />
+
         {/* 항성계 전환 애니메이션, 갤럭시 전환 애니메이션 또는 일반 별 렌더링 */}
         <Suspense fallback={null}>
           {isReturningToGalaxy ? (
@@ -272,6 +278,10 @@ export const StarsScene: React.FC = () => {
                   />
                 ))}
 
+              {invisibleStars.map((star) => (
+                <InvisibleStar key={star.id} star={star} onClick={handleStarClick} />
+              ))}
+
               {/* 별들 간의 연결선 */}
               {!showPlanetSystem && <StarConnections stars={renderedStars} />}
 
@@ -290,6 +300,7 @@ export const StarsScene: React.FC = () => {
         <StarNavigationCompactPanel handleCancelNavigation={handleCancelNavigation} />
         <StarNavigationWarpIndicateSphere />
         <BackToCurrentPositionFloatingButton />
+        <StarScanIndicateSphere />
 
         {/* Camera controls with zoom disabled */}
         <OrbitControls
@@ -380,6 +391,7 @@ export const StarsScene: React.FC = () => {
       <CommandPanel />
       <DetailedPanel />
       <ProgressIndicatorWrapper />
+      <ScanCompactPanel />
 
       {/* Selected planet info panel */}
       {/* {selectedPlanet && showPlanetSystem && (

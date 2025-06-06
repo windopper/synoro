@@ -35,6 +35,7 @@ import {
   handleCancelNavigationRejected,
 } from "./actions/shipNavigationAction";
 import { cancelTransmission, completeTransmission, handleCancelTransmissionFulfilled, handleCancelTransmissionRejected, handleCompleteTransmissionFulfilled, handleCompleteTransmissionRejected } from "./actions/shipCommunicationAction";
+import { handleShipCancelScanAction, handleShipStartScanAction, handleShipScanCompleteAction, handleShipStartScanActionFulfilled, handleShipStartScanActionRejected, handleShipScanCompleteActionFulfilled, handleShipScanCompleteActionRejected, handleShipCancelScanActionFulfilled, handleShipCancelScanActionRejected } from "./actions/shipScanAction";
 
 // === 상태 인터페이스 정의 ===
 
@@ -843,21 +844,6 @@ export const shipSystemsSlice = createSlice({
     },
 
     // === 탐사 관리 ===
-    startScan: (
-      state,
-      action: PayloadAction<{
-        scanId: string;
-        targetId: string;
-        duration: number;
-      }>
-    ) => {
-      state.activeScans[action.payload.scanId] = {
-        targetId: action.payload.targetId,
-        progress: 0,
-        estimatedCompletion: Date.now() + action.payload.duration * 1000,
-      };
-    },
-
     updateScanProgress: (
       state,
       action: PayloadAction<{ scanId: string; progress: number }>
@@ -865,15 +851,7 @@ export const shipSystemsSlice = createSlice({
       const scan = state.activeScans[action.payload.scanId];
       if (scan) {
         scan.progress = Math.max(0, Math.min(100, action.payload.progress));
-
-        if (scan.progress >= 100) {
-          delete state.activeScans[action.payload.scanId];
-        }
       }
-    },
-
-    cancelScan: (state, action: PayloadAction<string>) => {
-      delete state.activeScans[action.payload];
     },
 
     // === 항법 관리 ===
@@ -1359,6 +1337,30 @@ export const shipSystemsSlice = createSlice({
       })
       .addCase(cancelTransmission.rejected, (state, action) => {
         handleCancelTransmissionRejected(state, action);
+      })
+
+      // 스캔 시작
+      .addCase(handleShipStartScanAction.fulfilled, (state, action) => {
+        handleShipStartScanActionFulfilled(state, action);
+      })
+      .addCase(handleShipStartScanAction.rejected, (state, action) => {
+        handleShipStartScanActionRejected(state, action);
+      })
+
+      // 스캔 완료
+      .addCase(handleShipScanCompleteAction.fulfilled, (state, action) => {
+        handleShipScanCompleteActionFulfilled(state, action);
+      })
+      .addCase(handleShipScanCompleteAction.rejected, (state, action) => {
+        handleShipScanCompleteActionRejected(state, action);  
+      })
+
+      // 스캔 취소
+      .addCase(handleShipCancelScanAction.fulfilled, (state, action) => {
+        handleShipCancelScanActionFulfilled(state, action);
+      })
+      .addCase(handleShipCancelScanAction.rejected, (state, action) => {
+        handleShipCancelScanActionRejected(state, action);
       });
   },
 });
@@ -1376,9 +1378,7 @@ export const {
   updateEnergyStorage,
   addResources,
   consumeResources,
-  startScan,
   updateScanProgress,
-  cancelScan,
   updateCommunicationStatus,
   addTransmissionToQueue,
   updateTransmissionProgress,
@@ -1412,6 +1412,9 @@ export {
   cancelNavigation,
   completeTransmission,
   cancelTransmission,
+  handleShipStartScanAction,
+  handleShipScanCompleteAction,
+  handleShipCancelScanAction,
 };
 
 // === 기본 내보내기 ===

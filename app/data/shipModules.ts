@@ -323,6 +323,11 @@ export const NAVIGATION_MODULES: CompleteModuleInfo[] = [
 ];
 
 // === 탐사 시스템 모듈 정의 ===
+export const EXPLORATION_MODULE_SCANNER_PREFIX = "LRS_";
+export const EXPLORATION_MODULE_ANALYZER_PREFIX = "PAS_";
+export const EXPLORATION_MODULE_DRONE_BAY_PREFIX = "EDB_";
+export const EXPLORATION_MODULE_DATA_PROCESSING_PREFIX = "KPU_";
+
 export const EXPLORATION_MODULES: CompleteModuleInfo[] = [
   // 장거리 스캐너 시리즈
   {
@@ -332,7 +337,7 @@ export const EXPLORATION_MODULES: CompleteModuleInfo[] = [
     tier: 0,
     category: ModuleCategory.EXPLORATION,
     description: "기본적인 장거리 스캔 시스템입니다.",
-    energyConsumption: { base: 10, max: 25 },
+    energyConsumption: { base: 300, max: 300 },
     requiredResources: {
       "광학 센서 어레이": 10,
       "신호 처리기": 5,
@@ -340,7 +345,7 @@ export const EXPLORATION_MODULES: CompleteModuleInfo[] = [
     },
     durability: 75,
     performance: {
-      scanRange: 1,
+      scanRange: 30,
       scanResolution: 100,
     } as ExplorationModulePerformance,
   },

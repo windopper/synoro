@@ -23,7 +23,7 @@ export default function useNavigateShip({
   const currentStarId = useAppSelector(
     (state) => state.shipSystems.currentStarId
   );
-  const renderedStars = useRenderedStars();
+  const { renderedStars, invisibleStars } = useRenderedStars();
 
   const handleNavigateToStarWarp = useCallback(async () => {
     if (menuStar) {

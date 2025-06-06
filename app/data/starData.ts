@@ -34,6 +34,7 @@ export interface StarData {
     specialConditions?: string[]; // 특수 채취 조건들
     maxExtractionsPerHour?: number; // 시간당 최대 채취 횟수
   };
+  isVisible?: boolean;
 }
 
 export const starDatabase: StarData[] = [
