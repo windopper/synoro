@@ -9,6 +9,7 @@ import { ResearchGrid } from "./ResearchGrid";
 import { ResearchTree } from "./ResearchTree";
 import { ResearchDetailsModal } from "./ResearchDetailsModal";
 import { EmptyState } from "./EmptyState";
+import { createPortal } from "react-dom";
 
 export default function ResearchCenter() {
   const researchPoints = useAppSelector(
@@ -97,7 +98,7 @@ export default function ResearchCenter() {
         <EmptyState selectedCategory={selectedCategory} />
 
         {/* Research Details Modal */}
-        {showDetails && selectedTech && (
+        {showDetails && selectedTech && createPortal(
           <ResearchDetailsModal
             tech={selectedTech}
             onClose={() => {
@@ -105,7 +106,7 @@ export default function ResearchCenter() {
               setSelectedTech(null);
             }}
           />
-        )}
+        , document.body)}
       </div>
     </div>
   );

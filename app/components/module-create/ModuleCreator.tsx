@@ -6,6 +6,7 @@ import { CategorySelector } from "./CategorySelector";
 import { ModuleGrid } from "./ModuleGrid";
 import { ModuleDetailsModal } from "./ModuleDetailsModal";
 import { EmptyState } from "./EmptyState";
+import { createPortal } from "react-dom";
 
 export default function ModuleCreator() {
   const installedModules = useAppSelector(
@@ -57,7 +58,7 @@ export default function ModuleCreator() {
         <EmptyState selectedCategory={selectedCategory} />
 
         {/* Module Details Modal */}
-        {showDetails && selectedModule && (
+        {showDetails && selectedModule && createPortal(
           <ModuleDetailsModal
             module={selectedModule}
             onClose={() => {
@@ -65,7 +66,7 @@ export default function ModuleCreator() {
               setSelectedModule(null);
             }}
           />
-        )}
+        , document.body)}
       </div>
     </div>
   );

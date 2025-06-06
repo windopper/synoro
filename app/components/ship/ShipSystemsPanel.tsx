@@ -8,8 +8,9 @@ import ResourceGuide from "../resource-guide/ResourceGuide";
 import ModuleCreator from "../module-create/ModuleCreator";
 import ResearchCenter from "../research-center/ResearchCenter";
 import ModuleSystemLayout from "../module-system/ModuleSystemLayout";
+import CommunicationSystemLayout from "../communication-system/CommunicationSystemLayout";
 
-type TabType = "modules" | "upgrades" | "creator" | "research" | "resources";
+type TabType = "modules" | "upgrades" | "creator" | "research" | "resources" | "communication";
 
 export default function ShipSystemsPanel() {
   const shipSystems = useAppSelector((state) => state.shipSystems);
@@ -20,6 +21,7 @@ export default function ShipSystemsPanel() {
     { id: "upgrades" as TabType, label: "업그레이드", icon: "⬆️" },
     { id: "creator" as TabType, label: "모듈 생성", icon: "🔧" },
     { id: "research" as TabType, label: "연구 센터", icon: "🔬" },
+    { id: "communication" as TabType, label: "통신 시스템", icon: "📡" },
     { id: "resources" as TabType, label: "자원 가이드", icon: "📋" },
   ];
 
@@ -107,6 +109,12 @@ export default function ShipSystemsPanel() {
         {activeTab === "research" && (
           <div className="w-full overflow-y-auto bg-zinc-950/60 backdrop-blur-sm">
             <ResearchCenter />
+          </div>
+        )}
+
+        {activeTab === "communication" && (
+          <div className="w-full">
+            <CommunicationSystemLayout />
           </div>
         )}
 

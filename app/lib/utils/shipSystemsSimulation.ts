@@ -24,6 +24,7 @@ import { NavigationSystemManager } from './navigationSystem';
 import { AppDispatch, store } from '../store';
 import { getModuleById } from '@/app/data/shipModules';
 import { getResearchById } from '@/app/data/researchTechs';
+import CommunicationSystemManager from './communicationSystem';
 
 // === 시뮬레이션 매니저 클래스 ===
 export class ShipSystemsSimulation {
@@ -31,10 +32,12 @@ export class ShipSystemsSimulation {
   private intervalId: NodeJS.Timeout | null = null;
   private lastUpdateTime: number = Date.now();
   private navigationManager: NavigationSystemManager;
+  private communicationManager: CommunicationSystemManager;
   
   constructor(dispatch: AppDispatch) {
     this.dispatch = dispatch;
     this.navigationManager = new NavigationSystemManager(dispatch);
+    this.communicationManager = new CommunicationSystemManager(dispatch);
   }
   
   /**
@@ -74,7 +77,7 @@ export class ShipSystemsSimulation {
   updateSystems(state: ShipSystemsState, deltaTime: number): void {
     this.updateEnergySystem(state, deltaTime);
     this.updateScanningSystems(state, deltaTime);
-    this.updateCommunicationSystems(state, deltaTime);
+    this.communicationManager.updateCommunicationSystems(state, deltaTime);
     this.updateRepairSystems(state, deltaTime);
     this.updateExtractionSystems(state, deltaTime);
     this.updateShieldSystems(state, deltaTime);
@@ -137,31 +140,6 @@ export class ShipSystemsSimulation {
       // 스캔 완료 시 보상 지급
       if (newProgress >= 100) {
         this.completeScan(scanId, scan.targetId);
-      }
-    });
-  }
-  
-  /**
-   * 통신 시스템 업데이트
-   */
-  private updateCommunicationSystems(state: ShipSystemsState, deltaTime: number): void {
-    const performance = calculateShipPerformance(state);
-    const transmissionSpeed = performance.communication.transmissionSpeed;
-    
-    Object.entries(state.communicationStatus.transmissionQueue).forEach(([transmissionId, transmission]) => {
-      // 우선순위에 따른 전송 속도 조정
-      const priorityMultiplier = transmission.priority / 10;
-      const effectiveSpeed = transmissionSpeed * priorityMultiplier;
-      
-      // 진행도 계산 (데이터 크기에 비례)
-      const progressIncrement = (effectiveSpeed / transmission.dataSize) * deltaTime * 100;
-      const newProgress = Math.min(100, transmission.progress + progressIncrement);
-      
-      this.dispatch(updateTransmissionProgress({ transmissionId, progress: newProgress }));
-      
-      // 전송 완료 시 RP 보상
-      if (newProgress >= 100) {
-        this.completeTransmission(transmissionId, transmission);
       }
     });
   }
@@ -441,11 +419,6 @@ export class ShipSystemsSimulation {
     console.log(`스캔 완료: ${scanId} -> ${targetId}`);
     // 스캔 완료 보상 처리
     // 발견된 정보에 따라 지식 포인트 지급
-  }
-  
-  private completeTransmission(transmissionId: string, transmission: any): void {
-    console.log(`전송 완료: ${transmissionId}`);
-    // 전송 완료 시 RP 보상 또는 기타 처리
   }
   
   private completeUpgrade(queueId: string, upgrade: any): void {

@@ -12,6 +12,9 @@ function ProgressIndicator() {
   const stars = useAppSelector(
     (state) => state.starSystem.stars
   );
+  const transmissionQueue = useAppSelector(
+    (state) => state.shipSystems.communicationStatus.transmissionQueue
+  );
 
   const extractions = Object.entries(activeExtractions)
 
@@ -36,6 +39,14 @@ function ProgressIndicator() {
         value={navigation.travelProgress} 
       />
     )}
+    {Object.entries(transmissionQueue).map((transmission) => (
+      <ProgressIndicatorItem 
+        key={transmission[0]}
+        name={`Transmitting ${transmission[1].type.replace('_', ' ')}...`} 
+        description={`Transmitting ${transmission[1].type.replace('_', ' ')} to HQ`}
+        value={transmission[1].progress}
+      />
+    ))}
   </div>
 }
 

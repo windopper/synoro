@@ -34,6 +34,7 @@ import {
   handleCancelNavigationFulfilled,
   handleCancelNavigationRejected,
 } from "./actions/shipNavigationAction";
+import { cancelTransmission, completeTransmission, handleCancelTransmissionFulfilled, handleCancelTransmissionRejected, handleCompleteTransmissionFulfilled, handleCompleteTransmissionRejected } from "./actions/shipCommunicationAction";
 
 // === 상태 인터페이스 정의 ===
 
@@ -121,9 +122,24 @@ export interface ShipSystemsState {
     signalStrength: number; // 0-100%
     transmissionQueue: {
       [transmissionId: string]: {
+        type: string;
+        title: string;
+        content: string;
         dataSize: number;
         priority: number;
         progress: number;
+      };
+    };
+    transmissionHistory: {
+      [transmissionId: string]: {
+        type: string;
+        title: string;
+        content: string;
+        dataSize: number;
+        priority: number;
+        progress: number;
+        endTime: number;
+        result: "fulfilled" | "rejected" | "cancelled";
       };
     };
   };
@@ -384,7 +400,7 @@ const initialState: ShipSystemsState = {
       status: ModuleStatus.NORMAL,
       currentDurability: 90,
       energyAllocation: 60,
-      isActive: false,
+      isActive: true,
     },
     HIF_01_T0: {
       id: "HIF_01_T0",
@@ -461,6 +477,7 @@ const initialState: ShipSystemsState = {
     homeBaseConnection: true,
     signalStrength: 85,
     transmissionQueue: {},
+    transmissionHistory: {},
   },
 
   upgradeQueue: {},
@@ -874,6 +891,9 @@ export const shipSystemsSlice = createSlice({
       state,
       action: PayloadAction<{
         transmissionId: string;
+        type: string;
+        title: string;
+        content: string;
         dataSize: number;
         priority: number;
       }>
@@ -881,6 +901,9 @@ export const shipSystemsSlice = createSlice({
       state.communicationStatus.transmissionQueue[
         action.payload.transmissionId
       ] = {
+        type: action.payload.type,
+        title: action.payload.title,
+        content: action.payload.content,
         dataSize: action.payload.dataSize,
         priority: action.payload.priority,
         progress: 0,
@@ -900,12 +923,6 @@ export const shipSystemsSlice = createSlice({
           0,
           Math.min(100, action.payload.progress)
         );
-
-        if (transmission.progress >= 100) {
-          delete state.communicationStatus.transmissionQueue[
-            action.payload.transmissionId
-          ];
-        }
       }
     },
 
@@ -1325,6 +1342,23 @@ export const shipSystemsSlice = createSlice({
       })
       .addCase(cancelNavigation.rejected, (state, action) => {
         handleCancelNavigationRejected(state, action);
+      })
+
+
+      // 전송 완료
+      .addCase(completeTransmission.fulfilled, (state, action) => {
+        handleCompleteTransmissionFulfilled(state, action);
+      })
+      .addCase(completeTransmission.rejected, (state, action) => {
+        handleCompleteTransmissionRejected(state, action);
+      })
+
+      // 전송 취소
+      .addCase(cancelTransmission.fulfilled, (state, action) => {
+        handleCancelTransmissionFulfilled(state, action);
+      })
+      .addCase(cancelTransmission.rejected, (state, action) => {
+        handleCancelTransmissionRejected(state, action);
       });
   },
 });
@@ -1376,6 +1410,8 @@ export {
   navigateToStarWarp,
   completeNavigation,
   cancelNavigation,
+  completeTransmission,
+  cancelTransmission,
 };
 
 // === 기본 내보내기 ===
