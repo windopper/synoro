@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars as DreiStars, Stars } from "@react-three/drei";
+import { OrbitControls, Stars as DreiStars, Stars, MapControls } from "@react-three/drei";
 import Star from "./Star";
 import StarMenu from "../star/StarMenu";
 import { StarInfoPanel } from "../StarInfoPanel";
@@ -22,8 +22,10 @@ import { GalaxyTransition } from "./GalaxyTransition";
 import { StarData } from "../../data/starData";
 import { PlanetData } from "../../data/planetData";
 import { useAppDispatch } from "../../lib/hooks";
-import { calculateStarConnections } from "../../lib/features/starSystemSlice";
-import { setCameraPosition } from "@/app/lib/features/cameraSlice";
+import { 
+  toggleStarMenu,
+  closeStarMenu
+} from "@/app/lib/features/starMenuSlice";
 import { CameraController } from "./CameraController";
 import { useRenderedStars } from "@/app/hooks/useRenderedStars";
 import CommandPanel from "../CommandPanel";
@@ -35,35 +37,23 @@ import {
 import DetailedPanel from "../DetailedPanel";
 import ProgressIndicatorWrapper from "../indicator/ProgressIndicatorWrapper";
 import StarNavigationCompactPanel from "./StarNavigationCompactPanel";
-import useNavigateShip from "@/app/hooks/useNavigateShip";
+
 import StarNavigationWarpIndicateSphere from "./StarNavigationWarpIndicateSphere";
 import BackToCurrentPositionFloatingButton from "../BackToCurrentPositionFloatingButton";
 import InvisibleStar from "./InvisibleStar";
 import ScanCompactPanel from "./ScanCompactPanel";
 import StarScanIndicateSphere from "./StarScanIndicateSphere";
+import * as THREE from "three";
+import { Bloom, DepthOfField, EffectComposer, Grid, Noise } from "@react-three/postprocessing";
 
 const RENDER_DISTANCE = 100; // Distance at which stars are rendered
 
 export const StarsScene: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { renderedStars, invisibleStars } = useRenderedStars();
+  const { stars, renderedStars, invisibleStars } = useRenderedStars();
 
-  const [hoveredStar, setHoveredStar] = useState<StarData | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [selectedStar, setSelectedStar] = useState<StarData | null>(null);
 
-  // 별 메뉴 관련 상태 추가
-  const [showStarMenu, setShowStarMenu] = useState(false);
-  const [menuStar, setMenuStar] = useState<StarData | null>(null);
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-
-  // 행성 관련 상태
-  const [hoveredPlanet, setHoveredPlanet] = useState<PlanetData | null>(null);
-  const [planetTooltipPosition, setPlanetTooltipPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
   const [targetStar, setTargetStar] = useState<StarData | null>(null); // 항성계로 이동할 때 사용
   const [showPlanetSystem, setShowPlanetSystem] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -75,48 +65,22 @@ export const StarsScene: React.FC = () => {
     null
   );
 
-  const {
-    handleNavigateToStarNormal: navigateToStarNormal,
-    handleNavigateToStarWarp: navigateToStarWarp,
-    handleCancelNavigation,
-  } = useNavigateShip({ targetStar: menuStar });
-
-  const handleStarHover = useCallback(
-    (star: StarData | null, position: { x: number; y: number }) => {
-      setHoveredStar(star);
-      setTooltipPosition(position);
-    },
-    []
-  );
-
   const handleStarClick = useCallback(
     (star: StarData, position: { x: number; y: number }) => {
-      // 메뉴가 이미 열려있으면 닫기
-      if (showStarMenu) {
-        setShowStarMenu(false);
-        setMenuStar(null);
-        return;
-      }
-
-      // 메뉴 표시
-      setMenuStar(star);
-      setMenuPosition(position);
-      setShowStarMenu(true);
-      console.log("Star menu opened for:", star);
+      // 메뉴 토글 (이미 열려있으면 닫고, 닫혀있으면 열기)
+      dispatch(toggleStarMenu({ star, position }));
+      console.log("Star menu toggled for:", star);
     },
-    [showStarMenu]
+    [dispatch]
   );
 
   const handlePlanetHover = useCallback(
     (planet: PlanetData | null, position: { x: number; y: number }) => {
-      setHoveredPlanet(planet);
-      setPlanetTooltipPosition(position);
     },
     []
   );
 
   const handlePlanetClick = useCallback((planet: PlanetData) => {
-    setSelectedPlanet(planet);
     console.log("Selected planet:", planet);
   }, []);
 
@@ -150,70 +114,25 @@ export const StarsScene: React.FC = () => {
     setTargetStar(null);
     setShowPlanetSystem(false);
     setSelectedStar(null);
-    setSelectedPlanet(null);
-    setShowStarMenu(false);
-    setMenuStar(null);
+    dispatch(closeStarMenu());
     console.log("Galaxy transition animation completed");
+  }, [dispatch]);
+
+  const handleNavigateToSystem = useCallback((star: StarData) => {
+    setSelectedStar(star);
+    setTargetStar(star);
+    console.log("Navigating to star system:", star);
   }, []);
 
-  const handleNavigateToSystem = useCallback(() => {
-    if (menuStar) {
-      setSelectedStar(menuStar);
-      setTargetStar(menuStar);
-      setShowStarMenu(false);
-      setMenuStar(null);
-      console.log("Navigating to star system:", menuStar);
-    }
-  }, [menuStar]);
+  const handleViewStarInfo = useCallback((star: StarData) => {
+    setSelectedStar(star);
+    console.log("Viewing star info:", star);
+  }, []);
 
-  const handleNavigateToStarWarp = useCallback(async () => {
-    if (menuStar) {
-      try {
-        await navigateToStarWarp();
-      } catch (err) {
-        console.error("Error navigating to star:", err);
-      }
-      setShowStarMenu(false);
-      setMenuStar(null);
-      console.log("Moving spaceship to:", menuStar);
-    }
-  }, [menuStar]);
-
-  const handleNavigateToStarNormal = useCallback(async () => {
-    if (menuStar) {
-      try {
-        await navigateToStarNormal();
-      } catch (err) {
-        console.error("Error navigating to star:", err);
-      }
-      setShowStarMenu(false);
-      setMenuStar(null);
-      console.log("Moving spaceship to:", menuStar);
-    }
-  }, [menuStar]);
-
-  const handleViewStarInfo = useCallback(() => {
-    if (menuStar) {
-      setSelectedStar(menuStar);
-      setShowStarMenu(false);
-      setMenuStar(null);
-      console.log("Viewing star info:", menuStar);
-    }
-  }, [menuStar]);
-
-  const handleExtractResources = useCallback(() => {
-    if (menuStar) {
-      setResourceDialogStar(menuStar);
-      setShowResourceDialog(true);
-      setShowStarMenu(false);
-      setMenuStar(null);
-      console.log("Opening resource extraction dialog for:", menuStar);
-    }
-  }, [menuStar]);
-
-  const handleCloseMenu = useCallback(() => {
-    setShowStarMenu(false);
-    setMenuStar(null);
+  const handleExtractResources = useCallback((star: StarData) => {
+    setResourceDialogStar(star);
+    setShowResourceDialog(true);
+    console.log("Opening resource extraction dialog for:", star);
   }, []);
 
   const handleBackToGalaxy = useCallback(() => {
@@ -230,18 +149,29 @@ export const StarsScene: React.FC = () => {
           fov: 105,
           near: 0.1,
           far: 15000,
+          up: new THREE.Vector3(0, 1, 0),
         }}
         style={{
           background:
             "radial-gradient(ellipse at center, #0F1419 0%, #000000 100%)",
         }}
         performance={{ min: 0.5 }}
+        // onCreated={({ gl }) => {
+        //   gl.toneMapping = THREE.ACESFilmicToneMapping;
+        //   gl.setClearColor(new THREE.Color("#020207"));
+        // }}
       >
         {/* Ambient lighting */}
         <ambientLight intensity={0.1} />
 
         {/* Fog */}
-        <fog attach="fog" color="#000000" near={30} far={100} args={[0, 0, 0]} />
+        {/* <fog
+          attach="fog"
+          color="#000000"
+          near={30}
+          far={100}
+          args={[0, 0, 0]}
+        /> */}
 
         {/* 항성계 전환 애니메이션, 갤럭시 전환 애니메이션 또는 일반 별 렌더링 */}
         <Suspense fallback={null}>
@@ -251,7 +181,6 @@ export const StarsScene: React.FC = () => {
               allStars={renderedStars}
               onAnimationStart={handleGalaxyTransitionStart}
               onAnimationComplete={handleGalaxyTransitionComplete}
-              onStarHover={handleStarHover}
               onStarClick={handleStarClick}
               onPlanetHover={handlePlanetHover}
               onPlanetClick={handlePlanetClick}
@@ -273,17 +202,20 @@ export const StarsScene: React.FC = () => {
                   <Star
                     key={star.id}
                     star={star}
-                    onHover={handleStarHover}
                     onClick={handleStarClick}
                   />
                 ))}
 
               {invisibleStars.map((star) => (
-                <InvisibleStar key={star.id} star={star} onClick={handleStarClick} />
+                <InvisibleStar
+                  key={star.id}
+                  star={star}
+                  onClick={handleStarClick}
+                />
               ))}
 
               {/* 별들 간의 연결선 */}
-              {!showPlanetSystem && <StarConnections stars={renderedStars} />}
+              {/* {!showPlanetSystem && <StarConnections stars={renderedStars} />} */}
 
               {/* 행성계 렌더링 (기존 방식) */}
               {showPlanetSystem && selectedStar && (
@@ -297,8 +229,8 @@ export const StarsScene: React.FC = () => {
           )}
         </Suspense>
 
-        <StarNavigationCompactPanel handleCancelNavigation={handleCancelNavigation} />
-        <StarNavigationWarpIndicateSphere />
+        <StarNavigationCompactPanel />
+        {/* <StarNavigationWarpIndicateSphere /> */}
         <BackToCurrentPositionFloatingButton />
         <StarScanIndicateSphere />
 
@@ -307,10 +239,13 @@ export const StarsScene: React.FC = () => {
           makeDefault
           enableDamping
           dampingFactor={0.05}
-          minDistance={30} // CameraAnimator와 일치하도록 수정
-          maxDistance={45} // CameraAnimator와 일치하도록 수정
+          minDistance={5} // CameraAnimator와 일치하도록 수정
+          maxDistance={1000} // CameraAnimator와 일치하도록 수정
+          maxZoom={1000}
+          minZoom={100}
+          zoomSpeed={1}
           enablePan={true}
-          enableZoom={false} // Zoom disabled
+          enableZoom={true} // Zoom disabled
           enableRotate={true}
           maxPolarAngle={showPlanetSystem ? Math.PI * 0.75 : Math.PI} // CameraAnimator와 일치
           minPolarAngle={showPlanetSystem ? Math.PI * 0.15 : 0} // CameraAnimator와 일치
@@ -322,18 +257,29 @@ export const StarsScene: React.FC = () => {
           selectedStar={selectedStar}
         />
 
+        {/* <axesHelper args={[100]} /> */}
+
         {/* 카메라 애니메이션 */}
         <CameraAnimator />
+
+        <EffectComposer>
+          <Bloom
+            intensity={0.8}
+            blurPass={undefined}
+            luminanceThreshold={0.1}
+            luminanceSmoothing={0.025}
+            mipmapBlur={false}
+          />
+          {/* <Noise opacity={0.02} /> */}
+          {/* <DepthOfField 
+            focusDistance={0}
+            focalLength={1}
+          /> */}
+        </EffectComposer>
       </Canvas>
 
       {/* 별 클릭 메뉴 */}
       <StarMenu
-        showMenu={showStarMenu}
-        star={menuStar}
-        position={menuPosition}
-        onClose={handleCloseMenu}
-        onNavigateToStarWarp={handleNavigateToStarWarp}
-        onNavigateToStarNormal={handleNavigateToStarNormal}
         onNavigateToSystem={handleNavigateToSystem}
         onViewStarInfo={handleViewStarInfo}
         onExtractResources={handleExtractResources}
@@ -392,64 +338,6 @@ export const StarsScene: React.FC = () => {
       <DetailedPanel />
       <ProgressIndicatorWrapper />
       <ScanCompactPanel />
-
-      {/* Selected planet info panel */}
-      {/* {selectedPlanet && showPlanetSystem && (
-        <div className="absolute top-4 right-4 z-10 max-w-sm">
-          <div className="bg-black/90 backdrop-blur-sm rounded-xl p-4 text-white border border-gray-700">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-lg font-bold">{selectedPlanet.name}</h3>
-              <button
-                onClick={() => setSelectedPlanet(null)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-gray-400">Type:</span>
-                  <div className="text-blue-300">
-                    {selectedPlanet.type === "rocky"
-                      ? "암석형"
-                      : selectedPlanet.type === "gas_giant"
-                      ? "가스 거인"
-                      : selectedPlanet.type === "ice_giant"
-                      ? "얼음 거인"
-                      : "왜소 행성"}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-400">Size:</span>
-                  <div className="text-purple-300">
-                    {selectedPlanet.size.toFixed(2)} units
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-400">Orbit:</span>
-                  <div className="text-green-300">
-                    {selectedPlanet.orbitRadius.toFixed(1)} AU
-                  </div>
-                </div>
-                {selectedPlanet.moons && selectedPlanet.moons > 0 && (
-                  <div>
-                    <span className="text-gray-400">Moons:</span>
-                    <div className="text-yellow-300">
-                      {selectedPlanet.moons}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="pt-2 border-t border-gray-700">
-                <p className="text-gray-300 leading-relaxed">
-                  {selectedPlanet.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

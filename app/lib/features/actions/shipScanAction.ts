@@ -1,7 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "../../store";
 import { ShipSystemsState } from "../shipSystemsSlice";
-import { EXPLORATION_MODULE_SCANNER_PREFIX, getModuleById, ModuleCategory, ModuleInfo } from "@/app/data/shipModules";
+import { CompleteModuleInfo, EXPLORATION_MODULE_SCANNER_PREFIX, ExplorationModulePerformance, getModuleById, ModuleCategory, ModuleInfo } from "@/app/data/shipModules";
+import { setStarScannedBatch, setStarVisibilityBatch } from "../starSystemSlice";
 
 export const handleShipStartScanAction = createAsyncThunk(
   "shipSystems/startScan",
@@ -24,7 +25,7 @@ export const handleShipStartScanAction = createAsyncThunk(
     }
 
     const moduleInfo = getModuleById(scannerModule.id);
-    console.log(moduleInfo);
+
     if (moduleInfo && state.shipSystems.energy.currentStored < moduleInfo.energyConsumption.base) {
         throw new Error("Not enough energy");
     }
@@ -35,12 +36,28 @@ export const handleShipStartScanAction = createAsyncThunk(
 
 export const handleShipScanCompleteAction = createAsyncThunk(
   "shipSystems/scanComplete",
-  async (scanId: string, { getState }) => {
+  async (scanId: string, { getState, dispatch }) => {
     const state = getState() as RootState;
 
     if (!state.shipSystems.activeScans[scanId]) {
         throw new Error("Not scanning");
     }
+
+    const scanRange = state.shipSystems.activeScans[scanId].scanRange;
+    const currentPosition = state.shipSystems.position;
+    const starsInRange = state.starSystem.stars.filter((star) => {
+        const distance = Math.sqrt(
+            (star.position.x - currentPosition.x) ** 2 +
+            (star.position.y - currentPosition.y) ** 2 +
+            (star.position.z - currentPosition.z) ** 2
+        );
+        return !star.isVisible && distance <= scanRange;
+    });
+
+    dispatch(setStarScannedBatch({
+        starIds: starsInRange.map((star) => star.id),
+        isScanned: true
+    }));
 
     return { scanId };
   }
@@ -61,16 +78,16 @@ export const handleShipCancelScanAction = createAsyncThunk(
 
 export const handleShipStartScanActionFulfilled = (
     state: ShipSystemsState,
-    action: { payload: { moduleInfo: ModuleInfo | undefined } }
+    action: { payload: { moduleInfo: CompleteModuleInfo | undefined } }
 ) => {
     if (!action.payload.moduleInfo) {
         throw new Error("Module info not found");
     }
 
     state.activeScans[action.payload.moduleInfo.id] = {
-        targetId: state.currentStarId || 'unknown',
         progress: 0,
         estimatedCompletion: Date.now() + 30 * 1000,
+        scanRange: (action.payload.moduleInfo.performance as ExplorationModulePerformance).scanRange || 0
     };
 
     // 에너지 소모

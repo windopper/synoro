@@ -3,31 +3,47 @@
 import React, { memo, useCallback, useState } from 'react'
 import { Ship, Rocket, Info, Zap, ArrowLeft, Plane, Gauge } from 'lucide-react'
 import { StarData } from '../../data/starData'
+import { useAppSelector, useAppDispatch } from '../../lib/hooks'
+import { 
+  selectShowStarMenu,
+  selectMenuStar,
+  selectMenuPosition,
+  closeStarMenu
+} from '../../lib/features/starMenuSlice'
+import useNavigateShip from '../../hooks/useNavigateShip'
 
 interface StarMenuProps {
-  showMenu: boolean
-  star: StarData | null
-  position: { x: number; y: number }
-  onClose: () => void
-  onNavigateToStarWarp: () => void
-  onNavigateToStarNormal: () => void
-  onNavigateToSystem: () => void
-  onViewStarInfo: () => void
-  onExtractResources: () => void
+  onNavigateToSystem: (star: StarData) => void
+  onViewStarInfo: (star: StarData) => void
+  onExtractResources: (star: StarData) => void
 }
 
 const StarMenu: React.FC<StarMenuProps> = ({
-  showMenu,
-  star,
-  position,
-  onClose,
-  onNavigateToStarWarp,
-  onNavigateToStarNormal,
   onNavigateToSystem,
   onViewStarInfo,
   onExtractResources,
 }) => {
+  const dispatch = useAppDispatch()
+  
+  // Redux에서 상태 가져오기
+  const showMenu = useAppSelector(selectShowStarMenu)
+  const star = useAppSelector(selectMenuStar)
+  const position = useAppSelector(selectMenuPosition)
+  
+  // Navigation 훅 사용
+  const {
+    handleNavigateToStarNormal,
+    handleNavigateToStarWarp,
+    handleCancelNavigation,
+  } = useNavigateShip()
+  
   const [showShipMenu, setShowShipMenu] = useState(false)
+
+  // onClose 함수를 내부에서 정의
+  const onClose = useCallback(() => {
+    dispatch(closeStarMenu())
+    setShowShipMenu(false) // 서브메뉴도 닫기
+  }, [dispatch])
 
   // Smart positioning for menu
   const getMenuPosition = useCallback(() => {
@@ -81,16 +97,45 @@ const StarMenu: React.FC<StarMenuProps> = ({
     setShowShipMenu(false)
   }
 
-  const handleNormalMovement = () => {
-    onNavigateToStarNormal()
-    handleBackToMain()
-    onClose()
+  const handleNormalMovement = async () => {
+    try {
+      await handleNavigateToStarNormal()
+      handleBackToMain()
+      onClose()
+    } catch (error) {
+      console.error("Error in normal movement:", error)
+    }
   }
 
-  const handleWarpMovement = () => {
-    onNavigateToStarWarp()
-    handleBackToMain()
-    onClose()
+  const handleWarpMovement = async () => {
+    try {
+      await handleNavigateToStarWarp()
+      handleBackToMain()
+      onClose()
+    } catch (error) {
+      console.error("Error in warp movement:", error)
+    }
+  }
+
+  const handleNavigateToSystemClick = () => {
+    if (star) {
+      onNavigateToSystem(star)
+      onClose()
+    }
+  }
+
+  const handleViewStarInfoClick = () => {
+    if (star) {
+      onViewStarInfo(star)
+      onClose()
+    }
+  }
+
+  const handleExtractResourcesClick = () => {
+    if (star) {
+      onExtractResources(star)
+      onClose()
+    }
   }
 
   if (!showMenu || !star) return null
@@ -145,14 +190,14 @@ const StarMenu: React.FC<StarMenuProps> = ({
                   </button>
 
                   <button
-                    onClick={onNavigateToSystem}
+                    onClick={handleNavigateToSystemClick}
                     className="w-full px-1.5 py-1.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-gray-700/30 hover:border-gray-600/50 text-gray-200 text-xs rounded transition-colors flex items-center justify-center"
                   >
                     <Rocket className="w-3 h-3" />
                   </button>
 
                   <button
-                    onClick={onExtractResources}
+                    onClick={handleExtractResourcesClick}
                     className={`w-full px-1.5 py-1.5 border text-xs rounded transition-colors flex items-center justify-center ${
                       star?.stellarResources 
                         ? 'bg-amber-900/80 hover:bg-amber-800/90 border-amber-700/40 hover:border-amber-600/60 text-amber-100'
@@ -164,7 +209,7 @@ const StarMenu: React.FC<StarMenuProps> = ({
                   </button>
 
                   <button
-                    onClick={onViewStarInfo}
+                    onClick={handleViewStarInfoClick}
                     className="w-full px-1.5 py-1.5 bg-zinc-900/80 hover:bg-zinc-800/90 border border-gray-700/30 hover:border-gray-600/50 text-gray-200 text-xs rounded transition-colors flex items-center justify-center"
                   >
                     <Info className="w-3 h-3" />

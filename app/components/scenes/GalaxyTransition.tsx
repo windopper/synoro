@@ -139,18 +139,26 @@ export const GalaxyTransition: React.FC<GalaxyTransitionProps> = ({
         <Star
           key={star.id}
           star={star}
-          opacity={starFadeProgress}          onHover={animationPhase === 'complete' ? (onStarHover || (() => {})) : () => {}} // 애니메이션 완료 후에만 호버 활성화
+          opacity={starFadeProgress}          
           onClick={animationPhase === 'complete' ? (onStarClick || (() => {})) : () => {}} // 애니메이션 완료 후에만 클릭 활성화
         />
       ))}
 
+      {(animationPhase === "fade-out-planets" || animationPhase === "zoom-out") && currentStar && (
+        <Star
+          key={currentStar.id}
+          star={currentStar}
+          opacity={starFadeProgress}
+        />
+      )}
+
       {/* 별들 간의 연결선 (애니메이션 완료 후에만 표시) */}
-      {animationPhase === 'complete' && (
+      {/* {animationPhase === 'complete' && (
         <StarConnections 
           stars={allStars} 
           opacity={starFadeProgress}
         />
-      )}
+      )} */}
     </group>
   )
 }

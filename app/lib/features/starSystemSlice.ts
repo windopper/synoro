@@ -35,30 +35,30 @@ export const starSystemSlice = createSlice({
         state.stars = action.payload.stars;
 
         // 별들 간의 연결 관계 계산 (최대 거리 20 units)
-        const connections: StarConnection[] = [];
-        const maxDistance = 20;
+        // const connections: StarConnection[] = [];
+        // const maxDistance = 20;
 
-        for (let i = 0; i < action.payload.stars.length; i++) {
-          for (let j = i + 1; j < action.payload.stars.length; j++) {
-            const star1 = action.payload.stars[i];
-            const star2 = action.payload.stars[j];
+        // for (let i = 0; i < action.payload.stars.length; i++) {
+        //   for (let j = i + 1; j < action.payload.stars.length; j++) {
+        //     const star1 = action.payload.stars[i];
+        //     const star2 = action.payload.stars[j];
 
-            const distance = Math.sqrt(
-              Math.pow(star1.position.x - star2.position.x, 2) +
-                Math.pow(star1.position.y - star2.position.y, 2) +
-                Math.pow(star1.position.z - star2.position.z, 2)
-            );
+        //     const distance = Math.sqrt(
+        //       Math.pow(star1.position.x - star2.position.x, 2) +
+        //         Math.pow(star1.position.y - star2.position.y, 2) +
+        //         Math.pow(star1.position.z - star2.position.z, 2)
+        //     );
 
-            if (distance <= maxDistance) {
-              connections.push({
-                fromStarId: star1.id,
-                toStarId: star2.id,
-                distance,
-              });
-            }
-          }
-        }
-        state.starConnections = connections;
+        //     if (distance <= maxDistance) {
+        //       connections.push({
+        //         fromStarId: star1.id,
+        //         toStarId: star2.id,
+        //         distance,
+        //       });
+        //     }
+        //   }
+        // }
+        // state.starConnections = connections;
         state.initialized = true;
       }
     },
@@ -75,6 +75,24 @@ export const starSystemSlice = createSlice({
         const star = state.stars.find((star) => star.id === starId);
         if (star) {
           star.isVisible = isVisible;
+        }
+      });
+    },
+    setStarScanned: (state, action: PayloadAction<{ starId: string; isScanned: boolean }>) => {
+      const { starId, isScanned } = action.payload;
+      const star = state.stars.find((star) => star.id === starId);
+      if (star) {
+        star.isScanned = isScanned;
+        star.isVisible = isScanned;
+      }
+    },
+    setStarScannedBatch: (state, action: PayloadAction<{ starIds: string[]; isScanned: boolean }>) => {
+      const { starIds, isScanned } = action.payload;
+      starIds.forEach((starId) => {
+        const star = state.stars.find((star) => star.id === starId);
+        if (star) {
+          star.isScanned = isScanned;
+          star.isVisible = isScanned;
         }
       });
     },
@@ -143,6 +161,8 @@ export const {
   initializeStarSystem,
   setStarVisibility,
   setStarVisibilityBatch,
+  setStarScanned,
+  setStarScannedBatch,
 } = starSystemSlice.actions;
 
 export default starSystemSlice.reducer;

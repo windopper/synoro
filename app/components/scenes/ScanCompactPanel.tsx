@@ -124,9 +124,9 @@ export default function ScanCompactPanel() {
                                     return (
                                         <div key={scanId} className="bg-zinc-800/50 rounded p-2 space-y-2">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-xs text-zinc-300 font-mono">
+                                                {/* <span className="text-xs text-zinc-300 font-mono">
                                                     {scan.targetId}
-                                                </span>
+                                                </span> */}
                                                 <button
                                                     onClick={() => handleCancelScan(scanId)}
                                                     className="text-xs text-red-400 hover:text-red-300 transition-colors"

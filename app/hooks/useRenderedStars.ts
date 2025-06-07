@@ -46,6 +46,7 @@ export function useRenderedStars() {
   }, [stars]);
 
   return {
+    stars,
     renderedStars,
     invisibleStars,
   };

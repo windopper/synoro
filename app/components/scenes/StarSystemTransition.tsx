@@ -127,7 +127,7 @@ export const StarSystemTransition: React.FC<StarSystemTransitionProps> = ({
   return (
     <group ref={groupRef}>
       {/* 모든 별들 렌더링 (페이드 아웃 애니메이션 적용) */}
-      {animationPhase !== 'complete' && allStars.map((star) => {
+      {animationPhase === 'fade-out' && allStars.map((star) => {
         const isTargetStar = targetStar && star.id === targetStar.id
         
         // 목표 별이 아닌 별들은 페이드 아웃
@@ -138,11 +138,18 @@ export const StarSystemTransition: React.FC<StarSystemTransitionProps> = ({
             key={star.id}
             star={star}
             opacity={opacity}
-            onHover={() => {}} // 애니메이션 중에는 호버 비활성화
             onClick={() => {}} // 애니메이션 중에는 클릭 비활성화
           />
-        )
+        ) 
       })}
+
+      {animationPhase !== "fade-out" && targetStar && (
+        <Star
+          key={targetStar.id}
+          star={targetStar}
+          opacity={1}
+        />
+      )}
 
       {/* 행성계 렌더링 (애니메이션 완료 후 또는 행성 표시 단계에서) */}
       {targetStar && (animationPhase === 'show-planets' || animationPhase === 'complete') && (

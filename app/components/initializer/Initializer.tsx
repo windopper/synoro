@@ -13,7 +13,6 @@ function Initializer() {
   const stars = useAppSelector((state) => state.starSystem.stars);
   const initialized = useAppSelector((state) => state.starSystem.initialized);
 
-
   useEffect(() => {
     if (!initialized) {
       // spaceship 초기화

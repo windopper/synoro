@@ -75,7 +75,7 @@ export function CameraController({
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       console.log("key", key);
-      if (["w", "a", "s", "d", " "].includes(key)) {
+      if ([" "].includes(key)) {
         keysPressed.current.add(key);
         event.preventDefault();
       }
@@ -83,7 +83,7 @@ export function CameraController({
 
     const handleKeyUp = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (["w", "a", "s", "d", " "].includes(key)) {
+      if ([" "].includes(key)) {
         keysPressed.current.delete(key);
         event.preventDefault();
       }

@@ -12,6 +12,7 @@
     "@koale/useworker": "^4.1.2",
     "@react-three/drei": "^10.1.2",
     "@react-three/fiber": "^9.1.2",
+    "@react-three/postprocessing": "^3.0.4",
     "@reduxjs/toolkit": "^2.8.2",
     "@types/three": "^0.176.0",
     "clsx": "^2.1.1",

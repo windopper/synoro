@@ -16,8 +16,6 @@ export default function StarNavigationWarpIndicateSphere() {
     const pulseRingRef = useRef<THREE.Mesh>(null);
     const scanLineRef = useRef<THREE.Mesh>(null);
 
-    console.log('warpRange', warpRange);
-
     useFrame((state) => {
         const time = state.clock.getElapsedTime();
         
@@ -54,87 +52,6 @@ export default function StarNavigationWarpIndicateSphere() {
                     side={THREE.DoubleSide}
                 />
             </mesh>
-
-            {/* 외곽 링 표시 */}
-            {/* <mesh ref={outerRingRef}>
-                <ringGeometry args={[warpRange * 0.98, warpRange, 64]} />
-                <meshBasicMaterial 
-                    color="#0088ff" 
-                    transparent 
-                    opacity={0.12} 
-                    side={THREE.DoubleSide}
-                />
-            </mesh> */}
-
-            {/* 펄스 링 */}
-            {/* <mesh ref={pulseRingRef}>
-                <ringGeometry args={[warpRange * 0.95, warpRange * 0.97, 64]} />
-                <meshBasicMaterial 
-                    color="#00ccff" 
-                    transparent 
-                    opacity={0.08} 
-                    side={THREE.DoubleSide}
-                />
-            </mesh> */}
-
-            {/* 간단한 십자선 가이드 - 수평 */}
-            {/* <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0, warpRange, 64]} />
-                <meshBasicMaterial 
-                    color="#0099ff" 
-                    transparent 
-                    opacity={0.02} 
-                    wireframe 
-                    side={THREE.DoubleSide}
-                />
-            </mesh> */}
-
-            {/* 간단한 십자선 가이드 - 수직 */}
-            {/* <mesh rotation={[0, 0, Math.PI / 2]}>
-                <ringGeometry args={[0, warpRange, 64]} />
-                <meshBasicMaterial 
-                    color="#0099ff" 
-                    transparent 
-                    opacity={0.02} 
-                    wireframe 
-                    side={THREE.DoubleSide}
-                />
-            </mesh> */}
-
-            {/* 레이더 스캔 라인 - 매우 얇고 미묘한 */}
-            {/* <mesh ref={scanLineRef}>
-                <planeGeometry args={[warpRange, 0.3]} />
-                <meshBasicMaterial 
-                    color="#ffaa00" 
-                    transparent 
-                    opacity={0.15} 
-                    side={THREE.DoubleSide}
-                />
-            </mesh> */}
-
-            {/* 중심점 - 작고 미묘한 */}
-            {/* <mesh>
-                <sphereGeometry args={[1, 12, 12]} />
-                <meshBasicMaterial 
-                    color="#ff6600" 
-                    transparent 
-                    opacity={0.4} 
-                />
-            </mesh> */}
-
-            {/* 거리 마커 - 25%, 50%, 75% 지점에만 표시 */}
-            {/* {[0.25, 0.5, 0.75].map((ratio, index) => (
-                <mesh key={`marker-${index}`}>
-                    <sphereGeometry args={[warpRange * ratio, 32, 16]} />
-                    <meshBasicMaterial 
-                        color="#ffffff" 
-                        transparent 
-                        opacity={0.015} 
-                        wireframe 
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
-            ))} */}
         </group>
     )
 }

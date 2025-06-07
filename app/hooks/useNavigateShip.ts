@@ -9,14 +9,11 @@ import {
 } from "../lib/features/actions/shipNavigationAction";
 import { navigateToStar } from "../lib/features/actions/shipNavigationAction";
 import { useRenderedStars } from "./useRenderedStars";
+import { selectMenuStar } from "../lib/features/starMenuSlice";
 
-export default function useNavigateShip({
-  targetStar,
-}: {
-  targetStar: StarData | null;
-}) {
+export default function useNavigateShip() {
   const dispatch = useAppDispatch();
-  const menuStar = targetStar;
+  const menuStar = useAppSelector(selectMenuStar);
   const spaceShipPosition = useAppSelector(
     (state) => state.shipSystems.position
   );

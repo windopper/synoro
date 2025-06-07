@@ -111,8 +111,8 @@ export interface ShipSystemsState {
   // 탐사 관련
   activeScans: {
     [scanId: string]: {
-      targetId: string;
       progress: number;
+      scanRange: number;
       estimatedCompletion: number; // 완료 예상 시간 (타임스탬프)
     };
   };

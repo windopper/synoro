@@ -4,6 +4,7 @@ import { Html, Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useThree } from "@react-three/fiber";
 import { useRef, useState } from "react";
+import useNavigateShip from "@/app/hooks/useNavigateShip";
 
 const opacity = 0.3;
 
@@ -22,11 +23,10 @@ const formatTime = (seconds: number): string => {
   }
 };
 
-interface StarNavigationCompactPanelProps {
-  handleCancelNavigation: () => void;
-}
+interface StarNavigationCompactPanelProps {}
 
-export default function StarNavigationCompactPanel({ handleCancelNavigation }: StarNavigationCompactPanelProps) {
+export default function StarNavigationCompactPanel({}: StarNavigationCompactPanelProps) {
+  const { handleCancelNavigation } = useNavigateShip();
   const navigation = useAppSelector((state) => state.shipSystems.navigation);
   const spaceship = useAppSelector((state) => state.shipSystems);
   const stars = useAppSelector((state) => state.starSystem.stars);
