@@ -45,6 +45,7 @@ import ScanCompactPanel from "./ScanCompactPanel";
 import StarScanIndicateSphere from "./StarScanIndicateSphere";
 import * as THREE from "three";
 import { Bloom, DepthOfField, EffectComposer, Grid, Noise } from "@react-three/postprocessing";
+import { SynoroSceneTransition } from "./SynoroSceneTransition";
 
 const RENDER_DISTANCE = 100; // Distance at which stars are rendered
 
@@ -74,50 +75,6 @@ export const StarsScene: React.FC = () => {
     [dispatch]
   );
 
-  const handlePlanetHover = useCallback(
-    (planet: PlanetData | null, position: { x: number; y: number }) => {
-    },
-    []
-  );
-
-  const handlePlanetClick = useCallback((planet: PlanetData) => {
-    console.log("Selected planet:", planet);
-  }, []);
-
-  const handleAnimationStart = useCallback(() => {
-    setIsAnimating(true);
-    setShowPlanetSystem(false);
-  }, []);
-
-  const handleAnimationComplete = useCallback(() => {
-    setIsAnimating(false);
-    setShowPlanetSystem(true);
-  }, []);
-
-  const handleTransitionAnimationStart = useCallback(() => {
-    setIsAnimating(true);
-  }, []);
-
-  const handleTransitionAnimationComplete = useCallback(() => {
-    setIsAnimating(false);
-    setShowPlanetSystem(true);
-  }, []);
-
-  const handleGalaxyTransitionStart = useCallback(() => {
-    setIsAnimating(true);
-    console.log("Galaxy transition animation started");
-  }, []);
-
-  const handleGalaxyTransitionComplete = useCallback(() => {
-    setIsAnimating(false);
-    setIsReturningToGalaxy(false);
-    setTargetStar(null);
-    setShowPlanetSystem(false);
-    setSelectedStar(null);
-    dispatch(closeStarMenu());
-    console.log("Galaxy transition animation completed");
-  }, [dispatch]);
-
   const handleNavigateToSystem = useCallback((star: StarData) => {
     setSelectedStar(star);
     setTargetStar(star);
@@ -137,10 +94,15 @@ export const StarsScene: React.FC = () => {
 
   const handleBackToGalaxy = useCallback(() => {
     setIsReturningToGalaxy(true);
+    setTargetStar(null);
     console.log("Starting return to galaxy animation");
   }, []);
 
-  // Smart positioning for menu (similar to tooltip) - moved to StarMenu component
+  const finishGalaxyReturnAnimation = useCallback(() => {
+    setIsReturningToGalaxy(false);
+    setSelectedStar(null);
+    console.log("Return to galaxy animation completed");
+  }, []);
 
   return (
     <div className="w-full h-full relative">
@@ -174,60 +136,13 @@ export const StarsScene: React.FC = () => {
         /> */}
 
         {/* 항성계 전환 애니메이션, 갤럭시 전환 애니메이션 또는 일반 별 렌더링 */}
-        <Suspense fallback={null}>
-          {isReturningToGalaxy ? (
-            <GalaxyTransition
-              currentStar={selectedStar}
-              allStars={renderedStars}
-              onAnimationStart={handleGalaxyTransitionStart}
-              onAnimationComplete={handleGalaxyTransitionComplete}
-              onStarClick={handleStarClick}
-              onPlanetHover={handlePlanetHover}
-              onPlanetClick={handlePlanetClick}
-            />
-          ) : targetStar ? (
-            <StarSystemTransition
-              targetStar={targetStar}
-              allStars={renderedStars}
-              onAnimationStart={handleTransitionAnimationStart}
-              onAnimationComplete={handleTransitionAnimationComplete}
-              onPlanetHover={handlePlanetHover}
-              onPlanetClick={handlePlanetClick}
-            />
-          ) : (
-            <>
-              {/* 일반 별들 렌더링 */}
-              {!showPlanetSystem &&
-                renderedStars.map((star: StarData) => (
-                  <Star
-                    key={star.id}
-                    star={star}
-                    onClick={handleStarClick}
-                  />
-                ))}
-
-              {invisibleStars.map((star) => (
-                <InvisibleStar
-                  key={star.id}
-                  star={star}
-                  onClick={handleStarClick}
-                />
-              ))}
-
-              {/* 별들 간의 연결선 */}
-              {/* {!showPlanetSystem && <StarConnections stars={renderedStars} />} */}
-
-              {/* 행성계 렌더링 (기존 방식) */}
-              {showPlanetSystem && selectedStar && (
-                <PlanetSystem
-                  star={selectedStar}
-                  onPlanetHover={handlePlanetHover}
-                  onPlanetClick={handlePlanetClick}
-                />
-              )}
-            </>
-          )}
-        </Suspense>
+        <SynoroSceneTransition
+          currentStar={targetStar}
+          allStars={renderedStars}
+          handleStarClick={handleStarClick}
+          isReturningToGalaxy={isReturningToGalaxy}
+          onFinishReturnGalaxy={finishGalaxyReturnAnimation}
+        />
 
         <StarNavigationCompactPanel />
         {/* <StarNavigationWarpIndicateSphere /> */}

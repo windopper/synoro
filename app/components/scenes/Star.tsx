@@ -87,16 +87,10 @@ const Star: React.FC<StarProps> = React.memo(
           onClick={handleClick}
           scale={1} // Reduced scale effect
         >
-          <dodecahedronGeometry args={[0.5, 1]} />
-          {/* <meshStandardMaterial
-            emissive={star.color}
-            emissiveIntensity={1}
-            opacity={1}
-            toneMapped={false}
-          /> */}
+          <dodecahedronGeometry args={[0.05, 1]} />
           <spriteMaterial
             color={star.color}
-            opacity={1}
+            opacity={opacity}
             toneMapped={false}
             transparent={true}
           />
