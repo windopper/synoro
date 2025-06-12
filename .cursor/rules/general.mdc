@@ -1,5 +1,6 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
+항상 AGENTS.md 파일을 참조하세요.
