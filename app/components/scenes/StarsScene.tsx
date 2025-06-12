@@ -6,9 +6,10 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
 } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars as DreiStars, Stars, MapControls } from "@react-three/drei";
+import { OrbitControls, Stars as DreiStars, Stars, MapControls, CameraControls } from "@react-three/drei";
 import Star from "./Star";
 import StarMenu from "../star/StarMenu";
 import { StarInfoPanel } from "../StarInfoPanel";
@@ -65,6 +66,7 @@ export const StarsScene: React.FC = () => {
   const [resourceDialogStar, setResourceDialogStar] = useState<StarData | null>(
     null
   );
+  const cameraControlsRef = useRef<CameraControls>(null);
 
   const handleStarClick = useCallback(
     (star: StarData, position: { x: number; y: number }) => {
@@ -150,32 +152,14 @@ export const StarsScene: React.FC = () => {
         <StarScanIndicateSphere />
 
         {/* Camera controls with zoom disabled */}
-        <OrbitControls
-          makeDefault
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={5} // CameraAnimator와 일치하도록 수정
-          maxDistance={1000} // CameraAnimator와 일치하도록 수정
-          maxZoom={1000}
-          minZoom={100}
-          zoomSpeed={1}
-          enablePan={true}
-          enableZoom={true} // Zoom disabled
-          enableRotate={true}
-          maxPolarAngle={showPlanetSystem ? Math.PI * 0.75 : Math.PI} // CameraAnimator와 일치
-          minPolarAngle={showPlanetSystem ? Math.PI * 0.15 : 0} // CameraAnimator와 일치
-          panSpeed={showPlanetSystem ? 0.5 : 0.8}
-          rotateSpeed={showPlanetSystem ? 0.3 : 0.5}
-        />
+        <CameraControls ref={cameraControlsRef} makeDefault />
         <CameraController
           showPlanetSystem={showPlanetSystem}
           selectedStar={selectedStar}
+          cameraControlsRef={cameraControlsRef as React.RefObject<CameraControls>}
         />
-
-        {/* <axesHelper args={[100]} /> */}
-
         {/* 카메라 애니메이션 */}
-        <CameraAnimator />
+        <CameraAnimator cameraControlsRef={cameraControlsRef as React.RefObject<CameraControls>} />
 
         <EffectComposer>
           <Bloom
