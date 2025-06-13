@@ -31,13 +31,16 @@ export const Planet: React.FC<PlanetProps> = ({
     [number, number, number]
   >([starPosition[0] + planet.orbitRadius, starPosition[1], starPosition[2]]);
 
+  const scale = planet.size * 0.005;
+  const orbitRadius = planet.orbitRadius * 0.01;
+
   useFrame((state, delta) => {
     if (!meshRef.current) return;
 
     // 궤도 운동 (수평 궤도, Y축 변화 제거)
     orbitRef.current += planet.orbitSpeed * delta;
-    const x = starPosition[0] + Math.cos(orbitRef.current) * planet.orbitRadius;
-    const z = starPosition[2] + Math.sin(orbitRef.current) * planet.orbitRadius;
+    const x = starPosition[0] + Math.cos(orbitRef.current) * orbitRadius;
+    const z = starPosition[2] + Math.sin(orbitRef.current) * orbitRadius;
     const y = starPosition[1]; // 별과 같은 높이로 고정하여 수평 궤도 유지
 
     meshRef.current.position.set(x, y, z);
@@ -74,9 +77,6 @@ export const Planet: React.FC<PlanetProps> = ({
     onClick?.(planet);
   };
 
-  // 행성 크기 계산 (호버 시 확대)
-  const scale = hovered ? planet.size * 1.3 : planet.size;
-
   // 생명체 거주 가능 영역인지 확인 (8-18 단위)
   const isInHabitableZone = planet.orbitRadius >= 8 && planet.orbitRadius <= 18;
 
@@ -85,25 +85,13 @@ export const Planet: React.FC<PlanetProps> = ({
       {/* 궤도 선 - 더 정교하고 우아한 디자인 */}
       <mesh position={starPosition} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry
-          args={[planet.orbitRadius - 0.01, planet.orbitRadius, 128]}
+          args={[orbitRadius - 0.001, orbitRadius, 256]}
         />
         <meshBasicMaterial
           color={isInHabitableZone ? "#00ff9960" : "#ffffff30"}
           transparent
           opacity={(isInHabitableZone ? 0.4 : 0.15) * opacity}
           side={2} // DoubleSide
-        />
-      </mesh>
-
-      {/* 궤도 포인트 표시 (더 미세한 점들) */}
-      <mesh position={starPosition} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry
-          args={[planet.orbitRadius - 0.01, planet.orbitRadius + 0.01, 256]}
-        />
-        <meshBasicMaterial
-          color={isInHabitableZone ? "#00ff99" : "#ffffff"}
-          transparent
-          opacity={(isInHabitableZone ? 0.6 : 0.3) * opacity}
         />
       </mesh>
 
@@ -137,30 +125,6 @@ export const Planet: React.FC<PlanetProps> = ({
             opacity={0.1 * opacity}
           />
         </mesh>
-      )}
-
-      {/* 생명체 거주 가능 영역 행성 특별 효과 */}
-      {isInHabitableZone && (
-        <mesh scale={scale * 1.2} position={planetPosition}>
-          <sphereGeometry args={[1, 16, 16]} />{" "}
-          <meshBasicMaterial
-            color="#00ff99"
-            transparent
-            opacity={0.05 * opacity}
-          />
-        </mesh>
-      )}
-
-      {/* 달들 (있는 경우) */}
-      {planet.moons && planet.moons > 0 && (
-        <MoonSystem
-          planet={planet}
-          planetPosition={{
-            x: planetPosition[0],
-            y: planetPosition[1],
-            z: planetPosition[2],
-          }}
-        />
       )}
     </group>
   );

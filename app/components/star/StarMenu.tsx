@@ -13,14 +13,10 @@ import {
 import useNavigateShip from '../../hooks/useNavigateShip'
 
 interface StarMenuProps {
-  onNavigateToSystem: (star: StarData) => void
-  onViewStarInfo: (star: StarData) => void
   onExtractResources: (star: StarData) => void
 }
 
 const StarMenu: React.FC<StarMenuProps> = ({
-  onNavigateToSystem,
-  onViewStarInfo,
   onExtractResources,
 }) => {
   const dispatch = useAppDispatch()
@@ -119,14 +115,14 @@ const StarMenu: React.FC<StarMenuProps> = ({
 
   const handleNavigateToSystemClick = () => {
     if (star) {
-      onNavigateToSystem(star)
+      // onNavigateToSystem(star)
       onClose()
     }
   }
 
   const handleViewStarInfoClick = () => {
     if (star) {
-      onViewStarInfo(star)
+      // onViewStarInfo(star)
       onClose()
     }
   }

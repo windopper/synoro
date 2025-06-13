@@ -74,7 +74,7 @@ export const starDatabase: StarData[] = [
       "Known since ancient times, binary nature discovered in 1862",
     position: { x: -0, y: 0, z: -0 },
     color: "#9bb0ff",
-    size: 0.3,
+    size: 3.0,
     stellarResources: {
       primaryResources: {
         "플라즈마 에너지": 15,
@@ -111,7 +111,7 @@ export const starDatabase: StarData[] = [
     discoveryInfo: "Named after the pilot of the ship Argo in Greek mythology",
     position: { x: 200, y: -96, z: -240 },
     color: "#f9f5ff",
-    size: 0.25,
+    size: 2.5,
     stellarResources: {
       primaryResources: {
         "플라즈마 에너지": 25,
@@ -149,7 +149,7 @@ export const starDatabase: StarData[] = [
       "First star to be seen in daylight through a telescope (1635)",
     position: { x: 144, y: 120, z: -200 },
     color: "#ffb347",
-    size: 0.22,
+    size: 2.2,
     stellarResources: {
       primaryResources: {
         "금속 증기": 12,
@@ -187,7 +187,7 @@ export const starDatabase: StarData[] = [
       "First star photographed (1850) and first spectrum recorded (1872)",
     position: { x: -64, y: 176, z: -120 },
     color: "#9bb0ff",
-    size: 0.23,
+    size: 2.3,
     stellarResources: {
       primaryResources: {
         "플라즈마 에너지": 18,
@@ -224,7 +224,7 @@ export const starDatabase: StarData[] = [
     discoveryInfo: "First spectroscopic binary discovered (1899)",
     position: { x: -96, y: 144, z: -144 },
     color: "#fff2a1",
-    size: 0.21,
+    size: 2.1,
     stellarResources: {
       primaryResources: {
         "플라즈마 에너지": 22,
@@ -260,7 +260,7 @@ export const starDatabase: StarData[] = [
     discoveryInfo: "Name from Arabic meaning 'foot of the great one'",
     position: { x: 240, y: -64, z: -320 },
     color: "#92c5f7",
-    size: 0.27,
+    size: 2.7,
     stellarResources: {
       primaryResources: {
         "플라즈마 에너지": 35,
@@ -303,7 +303,7 @@ export const starDatabase: StarData[] = [
     variableType: "Semi-regular variable",
     position: { x: -160, y: 80, z: -280 },
     color: "#ff4500",
-    size: 0.3,
+    size: 3.0,
     stellarResources: {
       primaryResources: {
         "적색거성 물질": 30,
@@ -344,7 +344,7 @@ export const starDatabase: StarData[] = [
     discoveryInfo: "One of the first stars to have its surface imaged",
     position: { x: 96, y: 64, z: -96 },
     color: "#cad8ff",
-    size: 0.19,
+    size: 1.9,
     stellarResources: {
       primaryResources: {
         "플라즈마 에너지": 16,
@@ -380,7 +380,7 @@ export const starDatabase: StarData[] = [
     discoveryInfo: "Arabic name meaning 'the follower', follows the Pleiades",
     position: { x: -144, y: 96, z: -176 },
     color: "#ff8c00",
-    size: 0.24,
+    size: 2.4,
     stellarResources: {
       primaryResources: {
         "금속 증기": 18,
@@ -416,7 +416,7 @@ export const starDatabase: StarData[] = [
     variableType: "Ellipsoidal variable",
     position: { x: 176, y: -120, z: -224 },
     color: "#92c5f7",
-    size: 0.26,
+    size: 2.6,
   },
   {
     id: "antares",
@@ -439,7 +439,7 @@ export const starDatabase: StarData[] = [
     variableType: "Semi-regular variable",
     position: { x: 280, y: -160, z: -360 },
     color: "#ff6b6b",
-    size: 0.32,
+    size: 3.2,
   },
   {
     id: "pollux",
@@ -461,7 +461,7 @@ export const starDatabase: StarData[] = [
     discoveryInfo: "Named after one of the Gemini twins in Greek mythology",
     position: { x: -80, y: 200, z: -128 },
     color: "#ffb347",
-    size: 0.2,
+    size: 2.0,
   },
 ];
 
@@ -612,7 +612,7 @@ export function generateRandomStars(count: number = 20): StarData[] {
       description: "Distant star revealed by deep observation",
       position: positions[i],
       color: colors[spectralClass as keyof typeof colors] || "#ffffff",
-      size: Math.random() * 0.4 + 0.2, // Much smaller size for realistic scale and distance perception
+      size: (Math.random() * 0.4 + 0.2) * 10, // Much smaller size for realistic scale and distance perception
       stellarResources,
     });
   }
@@ -846,7 +846,7 @@ export function generateRenderableStars(allStars: StarData[]) {
           description: `Generated star in galactic ${layerName} region`,
           position: { x, y, z },
           color: starType.color,
-          size: Math.max(0.1, distanceFactor * (0.2 + Math.random() * 0.3)), // 훨씬 작은 크기로 거리감 증대
+          size: Math.max(0.1, distanceFactor * (0.2 + Math.random() * 0.3)) * 10, // 훨씬 작은 크기로 거리감 증대
           stellarResources,
         });
       }
@@ -855,21 +855,21 @@ export function generateRenderableStars(allStars: StarData[]) {
     return stars;
   }
 
-  // 은하 중심 코어 영역 별들 (밀도 감소)
+  // 은하 중심 코어 영역 별들
   const coreStars = generateGalacticStars(1000, "core", "core");
   starLayers.push(...coreStars);
 
-  // 외곽 코어 영역 별들 (밀도 감소) 
+  // 외곽 코어 영역 별들
   const outerCoreStars = generateGalacticStars(5000, "outercore", "outercore");
   starLayers.push(...outerCoreStars);
 
-  // 나선팔 영역 별들 (밀도 대폭 감소)
+  // 나선팔 영역 별들
   const spiralArmStars = generateGalacticStars(5000, "spiral", "spiral");
   starLayers.push(...spiralArmStars);
 
-  // 은하 디스크 영역 별들 (밀도 감소)
-  const diskStars = generateGalacticStars(3000, "disk", "disk");
-  starLayers.push(...diskStars);
+  // 은하 디스크 영역 별들
+  // const diskStars = generateGalacticStars(3000, "disk", "disk");
+  // starLayers.push(...diskStars);
 
   // 은하 헤일로 영역 별들 (구형 분포, x,z축 평면 중심, 더 희박하고 더 멀리)
   const haloStars: StarData[] = [];
@@ -910,7 +910,7 @@ export function generateRenderableStars(allStars: StarData[]) {
       description: "Ancient halo population star",
       position: { x, y, z },
       color: starType.color,
-      size: Math.max(0.05, 0.1 + Math.random() * 0.15), // 헤일로 별들은 매우 작게
+      size: Math.max(0.05, 0.1 + Math.random() * 0.15) * 10, // 헤일로 별들은 매우 작게
       stellarResources,
     });
   }
@@ -920,7 +920,7 @@ export function generateRenderableStars(allStars: StarData[]) {
   console.log(`- Core stars: ${coreStars.length}`);
   console.log(`- Outer core stars: ${outerCoreStars.length}`);
   console.log(`- Spiral arm stars: ${spiralArmStars.length}`);
-  console.log(`- Disk stars: ${diskStars.length}`);
+  // console.log(`- Disk stars: ${diskStars.length}`);
   console.log(`- Halo stars: ${haloStars.length}`);
   
   return starLayers;

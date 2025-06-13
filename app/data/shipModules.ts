@@ -345,7 +345,7 @@ export const EXPLORATION_MODULES: CompleteModuleInfo[] = [
     },
     durability: 75,
     performance: {
-      scanRange: 30,
+      scanRange: 300,
       scanResolution: 100,
     } as ExplorationModulePerformance,
   },

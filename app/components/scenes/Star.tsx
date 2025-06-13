@@ -8,11 +8,11 @@ import React, {
   memo,
   useEffect,
 } from "react";
-import { Mesh, Color, Vector3 } from "three";
+import { Mesh, Color, Vector3, Sprite, SpriteMaterial, Group } from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { StarData } from "../../data/starData";
-import { MeshReflectorMaterial, MeshWobbleMaterial } from "@react-three/drei";
 import * as THREE from "three";
+import { updateMeshScaleForMinScreenSize, updateStarSparkle } from "@/app/utils/mesh";
 
 interface StarProps {
   star: StarData;
@@ -20,9 +20,8 @@ interface StarProps {
   opacity?: number;
 }
 
-const sphereGeometry = new THREE.SphereGeometry(1, 4, 4);
 const sphereMaterial = new THREE.MeshStandardMaterial({
-  emissive: 'lightgreen',
+  emissive: "lightgreen",
   emissiveIntensity: 1,
   opacity: 1,
   toneMapped: false,
@@ -32,9 +31,31 @@ const sphereMaterial = new THREE.MeshStandardMaterial({
 const Star: React.FC<StarProps> = React.memo(
   ({ star, onClick, opacity = 1 }) => {
     const meshRef = useRef<Mesh>(null);
-    const { gl } = useThree();
+    const sparkleRef = useRef<Sprite>(null);
+    const groupRef = useRef<Group>(null);
+    const { gl, camera } = useThree();
     const [scannedEffect, setScannedEffect] = useState(false);
     const scanStartTime = useRef(0);
+
+    const starSize = star.size * 0.01;
+
+    const sphereGeometry = new THREE.SphereGeometry(starSize, 4, 4);
+
+    useFrame(() => {
+      if (meshRef.current) {
+        updateMeshScaleForMinScreenSize(meshRef.current, camera as THREE.PerspectiveCamera, gl, 1);
+        updateStarSparkle(
+          groupRef.current as THREE.Object3D,
+          meshRef.current as THREE.Mesh,
+          camera as THREE.PerspectiveCamera,
+          10
+        );
+      }
+
+      if (groupRef.current && groupRef.current.userData?.sparkleSprite) {
+        updateMeshScaleForMinScreenSize(groupRef.current.userData.sparkleSprite, camera as THREE.PerspectiveCamera, gl, 20);
+      }
+    });
 
     useEffect(() => {
       if (star.isScanned) {
@@ -61,15 +82,6 @@ const Star: React.FC<StarProps> = React.memo(
       [star, onClick, gl]
     );
 
-    const starSize = useMemo(() => {
-      // Simplified size calculation
-      const baseSizeFromMagnitude = Math.max(
-        0.35,
-        1.5 - star.apparentMagnitude * 0.2
-      );
-      return baseSizeFromMagnitude * star.size * 0.8; // Smaller overall size
-    }, [star.apparentMagnitude, star.size]);
-
     // 스캔 효과가 활성화된 경우
     if (scannedEffect) {
       return (
@@ -80,21 +92,23 @@ const Star: React.FC<StarProps> = React.memo(
     }
 
     return (
-      <group position={[star.position.x, star.position.y, star.position.z]}>
-        {/* Main star sphere - simplified geometry */}
-        <sprite
-          ref={meshRef}
-          onClick={handleClick}
-          scale={1} // Reduced scale effect
-        >
-          <dodecahedronGeometry args={[0.05, 1]} />
-          <spriteMaterial
+      <group
+        position={[star.position.x, star.position.y, star.position.z]}
+        onClick={handleClick}
+        ref={groupRef}
+      >
+        <mesh ref={meshRef}>
+          {/* Main star sphere - simplified geometry */}
+          <dodecahedronGeometry args={[starSize, 1]} />
+          <meshPhongMaterial
+            emissive={star.color}
+            emissiveIntensity={1}
             color={star.color}
             opacity={opacity}
             toneMapped={false}
             transparent={true}
           />
-        </sprite>
+        </mesh>
       </group>
     );
   }

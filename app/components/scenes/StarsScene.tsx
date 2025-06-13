@@ -54,12 +54,7 @@ export const StarsScene: React.FC = () => {
   const dispatch = useAppDispatch();
   const { stars, renderedStars, invisibleStars } = useRenderedStars();
 
-  const [selectedStar, setSelectedStar] = useState<StarData | null>(null);
-
-  const [targetStar, setTargetStar] = useState<StarData | null>(null); // 항성계로 이동할 때 사용
-  const [showPlanetSystem, setShowPlanetSystem] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isReturningToGalaxy, setIsReturningToGalaxy] = useState(false); // 갤럭시로 돌아가는 애니메이션 상태
+  console.log(renderedStars.length);
 
   // 자원 획득 다이얼로그 상태
   const [showResourceDialog, setShowResourceDialog] = useState(false);
@@ -77,33 +72,10 @@ export const StarsScene: React.FC = () => {
     [dispatch]
   );
 
-  const handleNavigateToSystem = useCallback((star: StarData) => {
-    setSelectedStar(star);
-    setTargetStar(star);
-    console.log("Navigating to star system:", star);
-  }, []);
-
-  const handleViewStarInfo = useCallback((star: StarData) => {
-    setSelectedStar(star);
-    console.log("Viewing star info:", star);
-  }, []);
-
   const handleExtractResources = useCallback((star: StarData) => {
     setResourceDialogStar(star);
     setShowResourceDialog(true);
     console.log("Opening resource extraction dialog for:", star);
-  }, []);
-
-  const handleBackToGalaxy = useCallback(() => {
-    setIsReturningToGalaxy(true);
-    setTargetStar(null);
-    console.log("Starting return to galaxy animation");
-  }, []);
-
-  const finishGalaxyReturnAnimation = useCallback(() => {
-    setIsReturningToGalaxy(false);
-    setSelectedStar(null);
-    console.log("Return to galaxy animation completed");
   }, []);
 
   return (
@@ -112,7 +84,7 @@ export const StarsScene: React.FC = () => {
         camera={{
           fov: 105,
           near: 0.1,
-          far: 15000,
+          far: 150000,
           up: new THREE.Vector3(0, 1, 0),
         }}
         style={{
@@ -139,23 +111,19 @@ export const StarsScene: React.FC = () => {
 
         {/* 항성계 전환 애니메이션, 갤럭시 전환 애니메이션 또는 일반 별 렌더링 */}
         <SynoroSceneTransition
-          currentStar={targetStar}
           allStars={renderedStars}
           handleStarClick={handleStarClick}
-          isReturningToGalaxy={isReturningToGalaxy}
-          onFinishReturnGalaxy={finishGalaxyReturnAnimation}
+          cameraControlsRef={cameraControlsRef as React.RefObject<CameraControls>}
         />
 
         <StarNavigationCompactPanel />
         {/* <StarNavigationWarpIndicateSphere /> */}
-        <BackToCurrentPositionFloatingButton />
+        {/* <BackToCurrentPositionFloatingButton /> */}
         <StarScanIndicateSphere />
 
         {/* Camera controls with zoom disabled */}
         <CameraControls ref={cameraControlsRef} makeDefault />
         <CameraController
-          showPlanetSystem={showPlanetSystem}
-          selectedStar={selectedStar}
           cameraControlsRef={cameraControlsRef as React.RefObject<CameraControls>}
         />
         {/* 카메라 애니메이션 */}
@@ -179,8 +147,6 @@ export const StarsScene: React.FC = () => {
 
       {/* 별 클릭 메뉴 */}
       <StarMenu
-        onNavigateToSystem={handleNavigateToSystem}
-        onViewStarInfo={handleViewStarInfo}
         onExtractResources={handleExtractResources}
       />
 
@@ -213,7 +179,7 @@ export const StarsScene: React.FC = () => {
       )} */}
 
       {/* 백투갤럭시 버튼 */}
-      {(targetStar || showPlanetSystem) && !isReturningToGalaxy && (
+      {/* {(targetStar || showPlanetSystem) && !isReturningToGalaxy && (
         <div className="absolute top-4 left-4 z-10">
           <button
             onClick={handleBackToGalaxy}
@@ -223,15 +189,15 @@ export const StarsScene: React.FC = () => {
             <span>Back to Galaxy</span>
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Selected star info panel */}
-      {selectedStar && !showPlanetSystem && !isAnimating && (
+      {/* {selectedStar && !showPlanetSystem && !isAnimating && (
         <StarInfoPanel
           star={selectedStar}
           onClose={() => setSelectedStar(null)}
         />
-      )}
+      )} */}
 
       <CommandPanel />
       <DetailedPanel />

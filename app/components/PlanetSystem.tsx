@@ -32,20 +32,6 @@ export const PlanetSystem: React.FC<PlanetSystemProps> = ({
   ]
   return (
     <group>
-      {/* 중심 별 확대 렌더링 - 더 현실적인 디자인 */}
-      {/* <mesh position={starPosition}>
-        <sphereGeometry args={[5, 32, 32]} />
-        <meshStandardMaterial
-          // color={star.color}
-          emissive={star.color}
-          emissiveIntensity={1}
-          roughness={0}
-          metalness={0}
-          transparent={opacity < 1}
-          opacity={opacity}
-        />
-      </mesh> */}
-
       {/* 행성들 */}
       {planetSystem.planets.map((planet, index) => {
         // 각 행성이 순차적으로 나타나도록 지연 적용

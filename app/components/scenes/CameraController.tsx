@@ -7,19 +7,13 @@ import { CameraControls } from "@react-three/drei";
 
 // Camera controller with position-based zoom and WASD movement
 export function CameraController({
-  showPlanetSystem,
-  selectedStar,
   cameraControlsRef,
   }: {
-  showPlanetSystem: boolean;
-  selectedStar: StarData | null;
   cameraControlsRef: React.RefObject<CameraControls>;
 }) {
   const { camera } = useThree();
   const keysPressed = useRef<Set<string>>(new Set());
   const shipPosition = useAppSelector(state => state.shipSystems.position);
-  const { navigation } = useAppSelector(state => state.shipSystems);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   // useEffect(() => {
   //   if (navigation && !isNavigating) {
@@ -73,7 +67,7 @@ export function CameraController({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [camera, showPlanetSystem, selectedStar]);
+  }, [camera]);
 
   // Handle continuous movement with useFrame
   useFrame((state, delta) => {
