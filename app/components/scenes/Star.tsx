@@ -37,13 +37,13 @@ const Star: React.FC<StarProps> = React.memo(
     const [scannedEffect, setScannedEffect] = useState(false);
     const scanStartTime = useRef(0);
 
-    const starSize = star.size * 0.01;
+    const starSize = star.size;
 
     const sphereGeometry = new THREE.SphereGeometry(starSize, 4, 4);
 
     useFrame(() => {
       if (meshRef.current) {
-        updateMeshScaleForMinScreenSize(meshRef.current, camera as THREE.PerspectiveCamera, gl, 1);
+        // updateMeshScaleForMinScreenSize(meshRef.current, camera as THREE.PerspectiveCamera, gl, 15);
         updateStarSparkle(
           groupRef.current as THREE.Object3D,
           meshRef.current as THREE.Mesh,
@@ -53,7 +53,7 @@ const Star: React.FC<StarProps> = React.memo(
       }
 
       if (groupRef.current && groupRef.current.userData?.sparkleSprite) {
-        updateMeshScaleForMinScreenSize(groupRef.current.userData.sparkleSprite, camera as THREE.PerspectiveCamera, gl, 20);
+        updateMeshScaleForMinScreenSize(groupRef.current.userData.sparkleSprite, camera as THREE.PerspectiveCamera, gl, 15);
       }
     });
 

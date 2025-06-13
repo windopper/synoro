@@ -18,3 +18,6 @@ export const SPIRAL = 3.0
 export const ARMS = 4
 
 export const HAZE_RATIO = 0.5
+
+export const BASE_STAR_RADIUS = 0.01
+export const BASE_PLANET_RADIUS = 0.005

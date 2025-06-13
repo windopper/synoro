@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars as DreiStars, Stars, MapControls, CameraControls } from "@react-three/drei";
+import { OrbitControls, Stars as DreiStars, Stars, MapControls, CameraControls, PerspectiveCamera, OrthographicCamera } from "@react-three/drei";
 import Star from "./Star";
 import StarMenu from "../star/StarMenu";
 import { StarInfoPanel } from "../StarInfoPanel";
@@ -122,7 +122,8 @@ export const StarsScene: React.FC = () => {
         <StarScanIndicateSphere />
 
         {/* Camera controls with zoom disabled */}
-        <CameraControls ref={cameraControlsRef} makeDefault />
+        <CameraControls ref={cameraControlsRef} makeDefault minDistance={0.15} maxDistance={300000} />
+        <OrthographicCamera />
         <CameraController
           cameraControlsRef={cameraControlsRef as React.RefObject<CameraControls>}
         />

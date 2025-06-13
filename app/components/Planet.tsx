@@ -31,8 +31,8 @@ export const Planet: React.FC<PlanetProps> = ({
     [number, number, number]
   >([starPosition[0] + planet.orbitRadius, starPosition[1], starPosition[2]]);
 
-  const scale = planet.size * 0.005;
-  const orbitRadius = planet.orbitRadius * 0.01;
+  const scale = planet.size;
+  const orbitRadius = planet.orbitRadius;
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
@@ -74,6 +74,7 @@ export const Planet: React.FC<PlanetProps> = ({
 
   const handleClick = (event: any) => {
     event.stopPropagation();
+    console.log("[DEBUG] planet", planet);
     onClick?.(planet);
   };
 

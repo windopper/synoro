@@ -1,3 +1,5 @@
+import { BASE_PLANET_RADIUS } from "../config/galaxyConfig";
+
 export interface PlanetData {
   id: string;
   name: string;
@@ -56,7 +58,7 @@ export const generatePlanetSystem = (starName: string, starId: string): PlanetSy
     
     // 보데의 법칙에 따른 궤도 거리 계산 (스케일 조정)
     const bodeDistance = calculateBodeDistance(i);
-    const scaleFactor = 15; // 시각적 표현을 위한 스케일 조정
+    const scaleFactor = BASE_PLANET_RADIUS * 15; // 시각적 표현을 위한 스케일 조정
     const baseOrbitRadius = bodeDistance * scaleFactor;
     const orbitRadius = baseOrbitRadius * (0.9 + Math.random() * 0.2); // 작은 변화
     
@@ -64,13 +66,13 @@ export const generatePlanetSystem = (starName: string, starId: string): PlanetSy
       id: `${starId}-planet-${i}`,
       name: `${starName} ${planetSuffixes[i] || planetSuffixes[i % planetSuffixes.length]}`,
       type: planetType,
-      size: planetType === 'gas_giant' ? 0.8 + Math.random() * 1.2 :
+      size: BASE_PLANET_RADIUS * (planetType === 'gas_giant' ? 0.8 + Math.random() * 1.2 :
             planetType === 'ice_giant' ? 0.6 + Math.random() * 0.8 :
             planetType === 'rocky' ? 0.3 + Math.random() * 0.5 :
-            0.2 + Math.random() * 0.3,
+            0.2 + Math.random() * 0.3),
       color: planetColors[planetType][Math.floor(Math.random() * planetColors[planetType].length)],
       orbitRadius,
-      orbitSpeed: (Math.random() * 0.5 + 0.2) / orbitRadius, // 더 가까운 행성이 빠르게 공전
+      orbitSpeed: (Math.random() * 0.05 + 0.05) / orbitRadius, // 더 가까운 행성이 빠르게 공전
       rotationSpeed: Math.random() * 0.1 + 0.05,
       moons: planetType === 'gas_giant' ? Math.floor(Math.random() * 4) + 1 :
              planetType === 'ice_giant' ? Math.floor(Math.random() * 3) :

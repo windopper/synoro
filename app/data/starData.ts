@@ -1,4 +1,4 @@
-import { ARM_Y_DIST, ARM_Y_MEAN } from "../config/galaxyConfig";
+import { ARM_Y_DIST, ARM_Y_MEAN, BASE_STAR_RADIUS } from "../config/galaxyConfig";
 import { ARM_X_DIST, ARM_X_MEAN, ARMS, SPIRAL } from "../config/galaxyConfig";
 import {
   CORE_X_DIST,
@@ -468,157 +468,157 @@ export const starDatabase: StarData[] = [
 const spectralClasses = ["O", "B", "A", "F", "G", "K", "M"];
 const luminosityClasses = ["V", "IV", "III", "II", "I"];
 
-export function generateRandomStars(count: number = 20): StarData[] {
-  const randomStars: StarData[] = [];
-  const starNames = [
-    "Proxima Centauri",
-    "Wolf 359",
-    "Lalande 21185",
-    "UV Ceti",
-    "Ross 154",
-    "Ross 248",
-    "Epsilon Eridani",
-    "Lacaille 9352",
-    "Ross 128",
-    "EZ Aquarii",
-    "Procyon B",
-    "61 Cygni A",
-    "Struve 2398 A",
-    "Groombridge 34 A",
-    "DX Cancri",
-    "Tau Ceti",
-    "Epsilon Indi",
-    "YZ Ceti",
-    "Luyten's Star",
-    "Teegarden's Star",
-    "Kapteyn's Star",
-    "Lacaille 8760",
-    "Kruger 60 A",
-    "Ross 614 A",
-    "Wolf 1061",
-    "Van Maanen's Star",
-    "Gliese 1",
-    "Wolf 424 A",
-    "TZ Arietis",
-    "Gliese 687",
-    "LHS 292",
-    "LP 731-58",
-    "GJ 1002",
-    "Groombridge 1618",
-    "Gliese 380",
-    "Gliese 832",
-    "LP 944-20",
-    "Gliese 570 A",
-    "HD 219134",
-    "Gliese 581",
-    "Wolf 1453",
-    "Ross 780",
-    "Gliese 849",
-    "LP 816-60",
-    "Wolf 294",
-    "Gliese 412 A",
-    "AD Leonis",
-    "Gliese 588",
-    "Gliese 682",
-    "Wolf 489",
-  ];
+// export function generateRandomStars(count: number = 20): StarData[] {
+//   const randomStars: StarData[] = [];
+//   const starNames = [
+//     "Proxima Centauri",
+//     "Wolf 359",
+//     "Lalande 21185",
+//     "UV Ceti",
+//     "Ross 154",
+//     "Ross 248",
+//     "Epsilon Eridani",
+//     "Lacaille 9352",
+//     "Ross 128",
+//     "EZ Aquarii",
+//     "Procyon B",
+//     "61 Cygni A",
+//     "Struve 2398 A",
+//     "Groombridge 34 A",
+//     "DX Cancri",
+//     "Tau Ceti",
+//     "Epsilon Indi",
+//     "YZ Ceti",
+//     "Luyten's Star",
+//     "Teegarden's Star",
+//     "Kapteyn's Star",
+//     "Lacaille 8760",
+//     "Kruger 60 A",
+//     "Ross 614 A",
+//     "Wolf 1061",
+//     "Van Maanen's Star",
+//     "Gliese 1",
+//     "Wolf 424 A",
+//     "TZ Arietis",
+//     "Gliese 687",
+//     "LHS 292",
+//     "LP 731-58",
+//     "GJ 1002",
+//     "Groombridge 1618",
+//     "Gliese 380",
+//     "Gliese 832",
+//     "LP 944-20",
+//     "Gliese 570 A",
+//     "HD 219134",
+//     "Gliese 581",
+//     "Wolf 1453",
+//     "Ross 780",
+//     "Gliese 849",
+//     "LP 816-60",
+//     "Wolf 294",
+//     "Gliese 412 A",
+//     "AD Leonis",
+//     "Gliese 588",
+//     "Gliese 682",
+//     "Wolf 489",
+//   ];
 
-  const positions = [];
+//   const positions = [];
 
-  for (let i = 0; i < count / 4; i++) {
-    let pos = new THREE.Vector3(
-      gaussianRandom(0, CORE_X_DIST),
-      gaussianRandom(0, GALAXY_THICKNESS),
-      gaussianRandom(0, CORE_Y_DIST),
-    );
-    positions.push(pos);
-  }
+//   for (let i = 0; i < count / 4; i++) {
+//     let pos = new THREE.Vector3(
+//       gaussianRandom(0, CORE_X_DIST),
+//       gaussianRandom(0, GALAXY_THICKNESS),
+//       gaussianRandom(0, CORE_Y_DIST),
+//     );
+//     positions.push(pos);
+//   }
 
-  for (let i = 0; i < count / 4; i++) {
-    let pos = new THREE.Vector3(
-      gaussianRandom(0, OUTER_CORE_X_DIST),
-      gaussianRandom(0, GALAXY_THICKNESS),
-      gaussianRandom(0, OUTER_CORE_Y_DIST),
-    );
-    positions.push(pos);
-  }
+//   for (let i = 0; i < count / 4; i++) {
+//     let pos = new THREE.Vector3(
+//       gaussianRandom(0, OUTER_CORE_X_DIST),
+//       gaussianRandom(0, GALAXY_THICKNESS),
+//       gaussianRandom(0, OUTER_CORE_Y_DIST),
+//     );
+//     positions.push(pos);
+//   }
 
-  for (let j = 0; j < ARMS; j++) {
-    for (let i = 0; i < count / 4; i++) {
-      let pos = spiral(
-        gaussianRandom(ARM_X_MEAN, ARM_X_DIST),
-        gaussianRandom(0, GALAXY_THICKNESS),
-        gaussianRandom(ARM_Y_MEAN, ARM_Y_DIST),
-        (j * 2 * Math.PI) / ARMS
-      );
-      positions.push(pos);
-    }
-  }
+//   for (let j = 0; j < ARMS; j++) {
+//     for (let i = 0; i < count / 4; i++) {
+//       let pos = spiral(
+//         gaussianRandom(ARM_X_MEAN, ARM_X_DIST),
+//         gaussianRandom(0, GALAXY_THICKNESS),
+//         gaussianRandom(ARM_Y_MEAN, ARM_Y_DIST),
+//         (j * 2 * Math.PI) / ARMS
+//       );
+//       positions.push(pos);
+//     }
+//   }
 
-  for (let i = 0; i < count; i++) {
-    const spectralClass =
-      spectralClasses[Math.floor(Math.random() * spectralClasses.length)];
-    const subclass = Math.floor(Math.random() * 10);
-    const luminosity =
-      luminosityClasses[Math.floor(Math.random() * luminosityClasses.length)];
+//   for (let i = 0; i < count; i++) {
+//     const spectralClass =
+//       spectralClasses[Math.floor(Math.random() * spectralClasses.length)];
+//     const subclass = Math.floor(Math.random() * 10);
+//     const luminosity =
+//       luminosityClasses[Math.floor(Math.random() * luminosityClasses.length)];
 
-    const distance = Math.random() * 200 + 10; // 10-210 light years (increased)
-    const temperature = Math.random() * 20000 + 3000; // 3000-23000 K
-    const mass = Math.random() * 20 + 0.1; // 0.1-20 solar masses
-    const radius = Math.random() * 50 + 0.5; // 0.5-50 solar radii
+//     const distance = Math.random() * 200 + 10; // 10-210 light years (increased)
+//     const temperature = Math.random() * 20000 + 3000; // 3000-23000 K
+//     const mass = Math.random() * 20 + 0.1; // 0.1-20 solar masses
+//     // BASE_STAR_RADIUS(평균 항성 크기)를 기준으로 실제 반지름을 계산
+//     const radius = Math.pow(mass, 0.8) * (0.5 + Math.random() * 1.5) * BASE_STAR_RADIUS;
 
-    // Generate spherical coordinates for better distribution (wider spacing)
-    const theta = Math.random() * Math.PI * 2; // Azimuth angle (0 to 2π)
-    const phi = Math.acos(2 * Math.random() - 1); // Inclination angle (uniform on sphere)
-    const r = 200 + Math.random() * 400; // Radius (200-600 units, wider distribution for realistic spacing)
+//     // 거리 기반 크기 보정 팩터 (멀수록 작게)
+//     const distanceFactor = Math.max(0.1, 1.0 - distance / 500);
 
-    const colors = {
-      O: "#92c5f7",
-      B: "#a2d2ff",
-      A: "#cad8ff",
-      F: "#fff2a1",
-      G: "#ffeb99",
-      K: "#ffb347",
-      M: "#ff6b6b",
-    };
+//     const colors = {
+//       O: "#92c5f7",
+//       B: "#a2d2ff",
+//       A: "#cad8ff",
+//       F: "#fff2a1",
+//       G: "#ffeb99",
+//       K: "#ffb347",
+//       M: "#ff6b6b",
+//     };
 
-    // 자원 할당 생성
-    const stellarResources = generateRandomStarResources(
-      `${spectralClass}${subclass}${luminosity}`,
-      temperature,
-      mass,
-      Math.random() * 1000 + 0.1
-    );
+//     // 자원 할당 생성
+//     const stellarResources = generateRandomStarResources(
+//       `${spectralClass}${subclass}${luminosity}`,
+//       temperature,
+//       mass,
+//       Math.random() * 1000 + 0.1
+//     );
 
-    randomStars.push({
-      id: `random-${i}`,
-      name: starNames[i] || `Star ${i + 1}`,
-      designation: `Random ${i + 1}`,
-      constellation: "Various",
-      apparentMagnitude: Math.random() * 8 + 2, // 2-10 magnitude (fainter stars)
-      absoluteMagnitude: Math.random() * 10 - 2,
-      distance,
-      spectralClass: `${spectralClass}${subclass}${luminosity}`,
-      temperature,
-      mass,
-      radius,
-      luminosity: Math.random() * 1000 + 0.1,
-      rightAscension: `${Math.floor(Math.random() * 24)}h ${Math.floor(
-        Math.random() * 60
-      )}m`,
-      declination: `${Math.random() > 0.5 ? "+" : "-"}${Math.floor(
-        Math.random() * 90
-      )}°`,
-      description: "Distant star revealed by deep observation",
-      position: positions[i],
-      color: colors[spectralClass as keyof typeof colors] || "#ffffff",
-      size: (Math.random() * 0.4 + 0.2) * 10, // Much smaller size for realistic scale and distance perception
-      stellarResources,
-    });
-  }
+//     randomStars.push({
+//       id: `random-${i}`,
+//       name: starNames[i] || `Star ${i + 1}`,
+//       designation: `Random ${i + 1}`,
+//       constellation: "Various",
+//       apparentMagnitude: Math.random() * 8 + 2, // 2-10 magnitude (fainter stars)
+//       absoluteMagnitude: Math.random() * 10 - 2,
+//       distance,
+//       spectralClass: `${spectralClass}${subclass}${luminosity}`,
+//       temperature,
+//       mass,
+//       radius,
+//       luminosity: Math.random() * 1000 + 0.1,
+//       rightAscension: `${Math.floor(Math.random() * 24)}h ${Math.floor(
+//         Math.random() * 60
+//       )}m`,
+//       declination: `${Math.random() > 0.5 ? "+" : "-"}${Math.floor(
+//         Math.random() * 90
+//       )}°`,
+//       description: "Distant star revealed by deep observation",
+//       position: positions[i],
+//       color: colors[spectralClass as keyof typeof colors] || "#ffffff",
+//       // BASE_STAR_RADIUS를 활용한 시각적 크기 (distanceFactor 적용)
+//       size: Math.max(0.1, distanceFactor * (0.2 + Math.random() * 0.3)) * BASE_STAR_RADIUS * 10,
+//       stellarResources,
+//     });
+//   }
 
-  return randomStars;
-}
+//   return randomStars;
+// }
 
 // 은하 위치에 따른 항성 밀도 계산 함수 (x, z축에 평행한 은하)
 function getGalacticDensity(x: number, y: number, z: number): number {
@@ -737,13 +737,13 @@ export function generateRenderableStars(allStars: StarData[]) {
   const cameraCenter = { x: 0, y: 0, z: 0 };
 
   // 기존 베이스 별들 추가 (은하 구조에 맞게 위치 조정)
-  starLayers.push(
-    ...allStars.map((star, index) => ({
-      ...star,
-      id: `base-${star.id}`,
-      position: star.position, // 기존 위치 유지
-    }))
-  );
+  // starLayers.push(
+  //   ...allStars.map((star, index) => ({
+  //     ...star,
+  //     id: `base-${star.id}`,
+  //     position: star.position, // 기존 위치 유지
+  //   }))
+  // );
 
   // 은하 분포에 따른 별 생성 함수 (generateRandomStars의 위치 생성 방식 사용)
   function generateGalacticStars(
@@ -839,14 +839,14 @@ export function generateRenderableStars(allStars: StarData[]) {
           spectralClass: `${starType.spectralClass}${subclass}${starType.luminosityClass}`,
           temperature: starType.temperature,
           mass: starType.mass,
-          radius: Math.pow(starType.mass, 0.8) * (0.5 + Math.random() * 1.5),
+          radius: Math.pow(starType.mass, 0.8) * (0.5 + Math.random() * 1.5) * BASE_STAR_RADIUS,
           luminosity: Math.pow(starType.mass, 3.5) * (0.1 + Math.random() * 2),
           rightAscension: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
           declination: `${Math.random() > 0.5 ? "+" : "-"}${Math.floor(Math.random() * 90)}°`,
           description: `Generated star in galactic ${layerName} region`,
           position: { x, y, z },
           color: starType.color,
-          size: Math.max(0.1, distanceFactor * (0.2 + Math.random() * 0.3)) * 10, // 훨씬 작은 크기로 거리감 증대
+          size: Math.max(0.1, distanceFactor * (0.2 + Math.random() * 0.3)) * BASE_STAR_RADIUS * 10, // 훨씬 작은 크기로 거리감 증대
           stellarResources,
         });
       }
@@ -903,14 +903,14 @@ export function generateRenderableStars(allStars: StarData[]) {
       spectralClass: `${starType.spectralClass}${subclass}${starType.luminosityClass}`,
       temperature: starType.temperature,
       mass: starType.mass,
-      radius: Math.pow(starType.mass, 0.8) * (0.3 + Math.random()),
+      radius: Math.pow(starType.mass, 0.8) * (0.3 + Math.random()) * BASE_STAR_RADIUS,
       luminosity: Math.pow(starType.mass, 3.5) * (0.05 + Math.random()),
       rightAscension: `${Math.floor(Math.random() * 24)}h ${Math.floor(Math.random() * 60)}m`,
       declination: `${Math.random() > 0.5 ? "+" : "-"}${Math.floor(Math.random() * 90)}°`,
       description: "Ancient halo population star",
       position: { x, y, z },
       color: starType.color,
-      size: Math.max(0.05, 0.1 + Math.random() * 0.15) * 10, // 헤일로 별들은 매우 작게
+      size: Math.max(0.05, 0.1 + Math.random() * 0.15) * BASE_STAR_RADIUS * 10, // 헤일로 별들은 매우 작게
       stellarResources,
     });
   }

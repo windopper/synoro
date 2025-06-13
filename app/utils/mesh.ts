@@ -116,11 +116,10 @@ function createSparkleSprite() {
  * 별의 거리에 따라 반짝임 효과를 업데이트합니다.
  * 별이 카메라로부터 일정 거리 이상 멀어지면 다이아몬드 모양의 반짝임이 활성화됩니다.
  *
- * @param {THREE.Mesh} groupMesh - 반짝임 효과를 적용할 별의 Mesh 객체 (또는 Object3D).
+ * @param {THREE.Object3D} groupMesh - 반짝임 효과를 적용할 별의 그룹 객체.
+ * @param {THREE.Mesh} starMesh - 별의 Mesh 객체.
  * @param {THREE.PerspectiveCamera} camera - 장면을 렌더링하는 퍼스펙티브 카메라.
- * @param {THREE.WebGLRenderer} renderer - WebGL 렌더러 (화면 높이 정보를 가져오는 데 사용).
  * @param {number} distanceThreshold - 반짝임 효과가 활성화될 최소 카메라-별 거리 (월드 단위).
- * @param {number} sparkleScreenSizePixels - 반짝임 스프라이트가 화면에서 가질 일정한 크기 (픽셀 단위, 지름).
  */
 export function updateStarSparkle(
   groupMesh: THREE.Object3D,
@@ -128,8 +127,7 @@ export function updateStarSparkle(
   camera: THREE.PerspectiveCamera,
   distanceThreshold: number,
 ) {
-    //   1. 별에 반짝임 스프라이트가 부착되어 있는지 확인하고, 없으면 생성하여 부착합니다.
-    //   userData에 저장하여 쉽게 접근하고, 별의 자식으로 추가하여 별과 함께 움직이도록 합니다.
+  // 1. 별에 반짝임 스프라이트가 부착되어 있는지 확인하고, 없으면 생성하여 부착합니다.
   if (!groupMesh.userData.sparkleSprite) {
     const sparkleSprite = createSparkleSprite();
     groupMesh.add(sparkleSprite);
@@ -140,27 +138,58 @@ export function updateStarSparkle(
 
   // 2. 별의 월드 좌표와 카메라 사이의 거리를 계산합니다.
   const starWorldPos = new THREE.Vector3();
-  groupMesh.getWorldPosition(starWorldPos); // 별의 실제 월드 위치를 가져옴
+  groupMesh.getWorldPosition(starWorldPos);
   const distance = camera.position.distanceTo(starWorldPos);
 
-  // 3. 거리가 임계값을 초과하는지 확인하여 반짝임 효과를 활성화/비활성화합니다.
-  if (distance > distanceThreshold) {
-    sparkleSprite.visible = true;
+  // 3. 전환 구간을 설정합니다 (임계값 전후로 부드러운 전환)
+  const transitionRange = distanceThreshold * 0.2; // 임계값의 20%를 전환 구간으로 설정
+  const fadeStartDistance = distanceThreshold - transitionRange;
+  const fadeEndDistance = distanceThreshold + transitionRange;
 
-    // 5. 반짝임(twinkling) 효과를 구현합니다.
-    // 현재 시간을 기준으로 sin 함수를 사용하여 투명도를 주기적으로 변경합니다.
-    const currentTime = performance.now() * 0.001; // 시간을 초 단위로 변환
-    const twinklePhase =
-      currentTime * sparkleSprite.userData.twinkleSpeed +
-      sparkleSprite.userData.twinklePhaseOffset;
-    const opacity = Math.sin(twinklePhase) * 0.5 + 0.5; // 0.0에서 1.0 사이의 값
-
-    // 투명도 범위를 조정하여 완전히 사라지지 않도록 합니다 (예: 0.3 ~ 1.0)
-    sparkleSprite.material.opacity = opacity * 0.7 + 0.3;
+  // 4. 거리에 따른 전환 비율을 계산합니다 (0: 별만 보임, 1: 스프라이트만 보임)
+  let transitionRatio = 0;
+  if (distance <= fadeStartDistance) {
+    transitionRatio = 0; // 별만 보임
+  } else if (distance >= fadeEndDistance) {
+    transitionRatio = 1; // 스프라이트만 보임
   } else {
-    // 거리가 임계값 이하이면 반짝임 스프라이트를 제거합니다.
+    // 전환 구간에서는 선형 보간
+    transitionRatio = (distance - fadeStartDistance) / (fadeEndDistance - fadeStartDistance);
+  }
+
+  // 5. 스프라이트와 별의 투명도를 설정합니다
+  sparkleSprite.visible = true;
+  starMesh.visible = true;
+
+  // 별의 투명도 (거리가 멀어질수록 투명해짐)
+  const starOpacity = 1 - transitionRatio;
+  if (starMesh.material && 'opacity' in starMesh.material) {
+    (starMesh.material as any).opacity = starOpacity;
+    (starMesh.material as any).transparent = true;
+  }
+
+  // 6. 스프라이트의 반짝임 효과와 투명도를 설정합니다
+  const currentTime = performance.now() * 0.001;
+  const twinklePhase =
+    currentTime * sparkleSprite.userData.twinkleSpeed +
+    sparkleSprite.userData.twinklePhaseOffset;
+  const twinkleIntensity = Math.sin(twinklePhase) * 0.5 + 0.5; // 0.0에서 1.0 사이
+
+  // 스프라이트의 기본 투명도 (거리가 멀어질수록 불투명해짐)
+  const baseSparkleOpacity = transitionRatio;
+  // 반짝임 효과를 적용한 최종 투명도 (완전히 사라지지 않도록 최소값 설정)
+  const finalSparkleOpacity = baseSparkleOpacity * (twinkleIntensity * 0.7 + 0.3);
+  
+  sparkleSprite.material.opacity = finalSparkleOpacity;
+  sparkleSprite.material.transparent = true;
+
+  // 7. 완전히 가까운 거리에서는 스프라이트를 숨기고, 완전히 먼 거리에서는 별을 숨깁니다
+  if (transitionRatio === 0) {
+    // remove sparkleSprite
     groupMesh.remove(sparkleSprite);
     groupMesh.userData.sparkleSprite = null;
-    starMesh.visible = true;
+  }
+  if (transitionRatio === 1) {
+    starMesh.visible = false;
   }
 }
