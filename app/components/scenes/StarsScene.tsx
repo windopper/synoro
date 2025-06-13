@@ -8,8 +8,8 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars as DreiStars, Stars, MapControls, CameraControls, PerspectiveCamera, OrthographicCamera } from "@react-three/drei";
+import { Canvas, useLoader } from "@react-three/fiber";
+import { OrbitControls, Stars as DreiStars, Stars, MapControls, CameraControls, PerspectiveCamera, OrthographicCamera, Environment } from "@react-three/drei";
 import Star from "./Star";
 import StarMenu from "../star/StarMenu";
 import { StarInfoPanel } from "../StarInfoPanel";
@@ -29,6 +29,7 @@ import {
 } from "@/app/lib/features/starMenuSlice";
 import { CameraController } from "./CameraController";
 import { useRenderedStars } from "@/app/hooks/useRenderedStars";
+import { useWebGLContext } from "@/app/hooks/useWebGLContext";
 import CommandPanel from "../CommandPanel";
 import {
   moveToStar,
@@ -47,12 +48,16 @@ import StarScanIndicateSphere from "./StarScanIndicateSphere";
 import * as THREE from "three";
 import { Bloom, DepthOfField, EffectComposer, Grid, Noise } from "@react-three/postprocessing";
 import { SynoroSceneTransition } from "./SynoroSceneTransition";
+import { WebGLPerformanceMonitor } from "../WebGLPerformanceMonitor";
 
 const RENDER_DISTANCE = 100; // Distance at which stars are rendered
 
 export const StarsScene: React.FC = () => {
   const dispatch = useAppDispatch();
   const { stars, renderedStars, invisibleStars } = useRenderedStars();
+
+  // AIDEV-NOTE: WebGL context lost/restored 처리를 위한 커스텀 훅 사용
+  const { contextLost, isReady, retryCount, handleCanvasRef } = useWebGLContext();
 
   console.log(renderedStars.length);
 
@@ -78,9 +83,23 @@ export const StarsScene: React.FC = () => {
     console.log("Opening resource extraction dialog for:", star);
   }, []);
 
+  // WebGL 컨텍스트가 손실된 경우 로딩 화면 표시
+  if (contextLost) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+          <h2 className="text-xl mb-2">컨텍스트 복구 중...</h2>
+          <p className="text-gray-400">WebGL 컨텍스트가 손실되어 복구하고 있습니다. (시도 {retryCount}/3)</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full relative">
       <Canvas
+        ref={handleCanvasRef}
         camera={{
           fov: 105,
           near: 0.1,
@@ -88,28 +107,37 @@ export const StarsScene: React.FC = () => {
           up: new THREE.Vector3(0, 1, 0),
         }}
         style={{
-          background:
-            "radial-gradient(ellipse at center, #0F1419 0%, #000000 100%)",
+          background: "rgba(0, 0, 0, 1)",
         }}
         performance={{ min: 0.5 }}
-        // onCreated={({ gl }) => {
-        //   gl.toneMapping = THREE.ACESFilmicToneMapping;
-        //   gl.setClearColor(new THREE.Color("#020207"));
-        // }}
+        gl={{
+          preserveDrawingBuffer: false,
+          powerPreference: "high-performance",
+          alpha: true,
+          antialias: true,
+          stencil: false,
+          depth: true,
+        }}
+        onCreated={(state) => {
+          // WebGL 컨텍스트 생성 후 추가 설정
+          const { gl } = state;
+          
+          // 리소스 관리 최적화
+          gl.shadowMap.enabled = false; // 그림자 비활성화로 성능 향상
+          gl.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 픽셀 비율 제한
+          
+          console.log("WebGL context created successfully", {
+            renderer: gl.info.render,
+            memory: gl.info.memory,
+          });
+        }}
       >
-        {/* Ambient lighting */}
-        <ambientLight intensity={0.1} />
-
-        {/* Fog */}
-        {/* <fog
-          attach="fog"
-          color="#000000"
-          near={30}
-          far={100}
-          args={[0, 0, 0]}
-        /> */}
 
         {/* 항성계 전환 애니메이션, 갤럭시 전환 애니메이션 또는 일반 별 렌더링 */}
+        {/* Ambient lighting */}
+        <ambientLight intensity={0.1} />
+        {/* <Stars radius={50000} depth={50} count={5000} factor={4} saturation={0} fade speed={1} /> */}
+
         <SynoroSceneTransition
           allStars={renderedStars}
           handleStarClick={handleStarClick}
@@ -122,7 +150,7 @@ export const StarsScene: React.FC = () => {
         <StarScanIndicateSphere />
 
         {/* Camera controls with zoom disabled */}
-        <CameraControls ref={cameraControlsRef} makeDefault minDistance={0.15} maxDistance={300000} />
+        <CameraControls ref={cameraControlsRef} makeDefault minDistance={0.15} maxDistance={40000} />
         <OrthographicCamera />
         <CameraController
           cameraControlsRef={cameraControlsRef as React.RefObject<CameraControls>}
@@ -144,6 +172,9 @@ export const StarsScene: React.FC = () => {
             focalLength={1}
           /> */}
         </EffectComposer>
+        
+        {/* WebGL 성능 모니터링 */}
+        <WebGLPerformanceMonitor />
       </Canvas>
 
       {/* 별 클릭 메뉴 */}

@@ -89,9 +89,9 @@ export const Planet: React.FC<PlanetProps> = ({
           args={[orbitRadius - 0.001, orbitRadius, 256]}
         />
         <meshBasicMaterial
-          color={isInHabitableZone ? "#00ff9960" : "#ffffff30"}
+          color={"gray"}
           transparent
-          opacity={(isInHabitableZone ? 0.4 : 0.15) * opacity}
+          opacity={1}
           side={2} // DoubleSide
         />
       </mesh>

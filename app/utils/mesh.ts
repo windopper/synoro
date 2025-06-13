@@ -86,7 +86,7 @@ export function updateMeshScaleForMinScreenSize(
  */
 function createSparkleSprite() {
   // 2~5 사이의 랜덤 숫자
-  const randomIndex = Math.floor(Math.random() * 7) + 2;
+  const randomIndex = Math.floor(Math.random() * 5) + 4;
 
   const map = new THREE.TextureLoader().load(
     `/textures/starSprite${randomIndex}.png`
